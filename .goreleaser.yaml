@@ -62,8 +62,10 @@ brews:
       owner: coinset-org
       name: homebrew-cli
     install: |
-      (bash_completion/"${BINARY_NAME}").write output
-      output = Utils.popen_read("SHELL=zsh #{bin}/${BINARY_NAME} completion zsh")
-      (zsh_completion/"_${BINARY_NAME}").write output
+      bin.install "coinset" => "coinset"
+      output = Utils.popen_read("SHELL=bash #{bin}/coinset completion bash")
+      (bash_completion/"coinset").write output
+      output = Utils.popen_read("SHELL=zsh #{bin}/coinset completion zsh")
+      (zsh_completion/"_coinset").write output
       prefix.install_metafiles
 
