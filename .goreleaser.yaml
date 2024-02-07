@@ -51,5 +51,15 @@ release:
   github:
     owner: coinset-org
     name: cli
-  draft: true
-  replace_existing_draft: true
+
+brews:
+  - commit_author:
+      name: Cameron Cooper
+      email: cameron@coinset.org
+    homepage: "https://www.coinset.org/"
+    description: "CLI for accessing the Chia blockchain."
+    license: "MIT"
+    repository:
+      owner: coinset-org
+      name: homebrew-cli
+
