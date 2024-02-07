@@ -1,6 +1,9 @@
 # Coinset CLI
 
-This command-line interface gives you quick access to the Chia Full Node RPC hosted at coinset.org.
+This command-line interface gives you quick access to the Chia blockchain information. The CLI can be used with the Full Node RPC provided by coinset.org, or any full node.
+
+![Demo GIF](./docs/demo.gif)
+
 
 ## Installation
 
