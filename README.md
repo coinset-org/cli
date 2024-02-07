@@ -15,10 +15,10 @@ Prebuilt binaries can be downloaded from the [Releases](https://github.com/coins
 brew install coinset-org/cli/coinset
 ```
 
-### Go Get
+### Go Install
 
 ```bash
-go get coinset-org/cli/cmd/coinset
+go install github.com/coinset-org/cli/cmd/coinset@latest
 ```
 
 ### Build from Source
