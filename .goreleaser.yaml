@@ -12,13 +12,12 @@ project_name: coinset
 
 before:
   hooks:
-    # You may remove this if you don't use go modules.
     - go mod tidy
-    # you may remove this if you don't need go generate
     - go generate ./...
 
 builds:
-  - env:
+  - main: ./cmd/coinset
+    env:
       - CGO_ENABLED=0
     goos:
       - linux
@@ -62,4 +61,9 @@ brews:
     repository:
       owner: coinset-org
       name: homebrew-cli
+    install: |
+      (bash_completion/"${BINARY_NAME}").write output
+      output = Utils.popen_read("SHELL=zsh #{bin}/${BINARY_NAME} completion zsh")
+      (zsh_completion/"_${BINARY_NAME}").write output
+      prefix.install_metafiles
 

@@ -43,6 +43,3 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&api, "api", "a", "", "api host to use")
 	rootCmd.MarkFlagsMutuallyExclusive("mainnet", "testnet", "api")
 }
-
-
-
