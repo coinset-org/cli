@@ -91,7 +91,11 @@ $ coinset get_blockchain_state -q .blockchain_state.peak.height
 
 ### Autocomplete
 
-Autocompletions for *bash*, *powershell*, *fish* and *zsh* are provided and can be generated with `coinset completion <shell>`. Installation instructions can be found with the help flag. For example:
+Autocompletions are provided and can be generated with `coinset completion <shell>`. Completions are automatically installed when using *brew* but brew completions for your shell need to be enabled. [Instructions can be found here](https://docs.brew.sh/Shell-Completion).
+
+
+
+Manual installation instructions can be found with the help flag. For example:
 
 ```bash
 $ coinset completion zsh --help
