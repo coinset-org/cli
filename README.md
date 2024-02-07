@@ -1,6 +1,6 @@
 # Coinset CLI
 
-Welcome to the Coinset CLI! This command-line interface allows you to access the Chia Full Node RPC hosted at coinset.org conveniently.
+This command-line interface gives you quick access to the Chia Full Node RPC hosted at coinset.org.
 
 ## Installation
 
@@ -83,7 +83,7 @@ $ coinset get_coin_records_by_parent_ids 0xa908ee64a5821b7bda5d798c053a79c8b3d7c
 Using the `-q` option you can pass in a jq filter to be used on the output. For example:
 
 ```bash
-$ coinset get_blockchain_state -q .blockchain_state.peak.height
+coinset get_blockchain_state -q .blockchain_state.peak.height
 ```
 ```json
 4911276
@@ -98,7 +98,9 @@ Autocompletions are provided and can be generated with `coinset completion <shel
 Manual installation instructions can be found with the help flag. For example:
 
 ```bash
-$ coinset completion zsh --help
+coinset completion zsh --help
+```
+```
 Generate the autocompletion script for the zsh shell.
 
 If shell completion is not already enabled in your environment you will need
