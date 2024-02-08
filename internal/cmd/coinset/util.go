@@ -42,12 +42,12 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 	    jsonString, _ := json.Marshal(jsonData)
 		buf = bytes.NewBuffer([]byte(string(jsonString)))
 	}
-    req, err := http.NewRequest("POST", apiRoot()+"/"+rpc, buf)
+	req, err := http.NewRequest("POST", apiRoot()+"/"+rpc, buf)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-    req.Header.Add("Content-Type", `application/json"`)
+	req.Header.Add("Content-Type", `application/json"`)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -55,31 +55,36 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		return
 	}
 
-    var result map[string]interface{}
-    byteResult, _ := ioutil.ReadAll(resp.Body)
-    json.Unmarshal(byteResult, &result)
+	var result map[string]interface{}
+	byteResult, _ := ioutil.ReadAll(resp.Body)
 
-    query, err := gojq.Parse(jq)
-    if err != nil {
-      fmt.Println(err)
-    }
-    iter := query.Run(result) // or query.RunWithContext
-    for {
-      v, ok := iter.Next()
-      if !ok {
-        break
-      }
-      if err, ok := v.(error); ok {
-        fmt.Println(err)
-      }
+	if (raw) {
+		fmt.Println(string(byteResult));
+		return;
+	}
 
-      f := colorjson.NewFormatter()
-      f.Indent = 2
+	json.Unmarshal(byteResult, &result)
 
-      s, _ := f.Marshal(v)
-      fmt.Println(string(s))
+	query, err := gojq.Parse(jq)
+	if err != nil {
+		fmt.Println(err)
+	}
+	iter := query.Run(result) // or query.RunWithContext
+	for {
+		v, ok := iter.Next()
+		if !ok {
+			break
+		}
+		if err, ok := v.(error); ok {
+			fmt.Println(err)
+		}
 
-    }
+		f := colorjson.NewFormatter()
+		f.Indent = 2
+
+		s, _ := f.Marshal(v)
+		fmt.Println(string(s))
+	}
 }
 
 func handleRequest(req *http.Request, err error) {
