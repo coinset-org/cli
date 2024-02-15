@@ -23,8 +23,8 @@ var getBlockRecordByHeightCmd = &cobra.Command{
         }
         return fmt.Errorf("invalid height specified: %s", args[0])
     },
-    Short: "Retrieves a summary of the current state of the blockchain and full node",
-    Long:  `Retrieves a summary of the current state of the blockchain and full node`,
+    Short: "etrieves a block record by height",
+    Long:  `etrieves a block record by height`,
     Run: func(cmd *cobra.Command, args []string) {
         height, _ := strconv.Atoi(args[0])
         jsonData := map[string]interface{}{}
