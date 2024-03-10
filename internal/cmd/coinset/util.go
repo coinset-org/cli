@@ -2,16 +2,21 @@ package cmd
 
 import (
 	"bytes"
-    "encoding/json"
-    "fmt"
-    "io"
+	"encoding/json"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"net/http"
 	"regexp"
-    "io/ioutil"
-    "net/http"
 
-	"github.com/itchyny/gojq"
 	"github.com/TylerBrock/colorjson"
+	"github.com/itchyny/gojq"
 )
+
+func isAddress(str string) bool {
+	r, err := regexp.MatchString("^(xch|txch){1}[0-9A-Za-z]{59}$", str)
+	return err == nil && r == true
+}
 
 func isHex(str string) bool {
 	r, err := regexp.MatchString("^(0x)?[0-9A-Fa-f]+$", str)
@@ -39,7 +44,7 @@ func apiRoot() string {
 func makeRequest(rpc string, jsonData map[string]interface{}) {
 	var buf io.Reader
 	if jsonData != nil {
-	    jsonString, _ := json.Marshal(jsonData)
+		jsonString, _ := json.Marshal(jsonData)
 		buf = bytes.NewBuffer([]byte(string(jsonString)))
 	}
 	req, err := http.NewRequest("POST", apiRoot()+"/"+rpc, buf)
@@ -55,21 +60,16 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		return
 	}
 
-	var result map[string]interface{}
 	byteResult, _ := ioutil.ReadAll(resp.Body)
+	processJsonBytes(byteResult)
+}
 
-	if (raw) {
-		fmt.Println(string(byteResult));
-		return;
-	}
-
-	json.Unmarshal(byteResult, &result)
-
+func processJsonData(jsonData map[string]interface{}) {
 	query, err := gojq.Parse(jq)
 	if err != nil {
 		fmt.Println(err)
 	}
-	iter := query.Run(result) // or query.RunWithContext
+	iter := query.Run(jsonData) // or query.RunWithContext
 	for {
 		v, ok := iter.Next()
 		if !ok {
@@ -85,6 +85,12 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		s, _ := f.Marshal(v)
 		fmt.Println(string(s))
 	}
+}
+
+func processJsonBytes(jsonBytes []byte) {
+	var jsonData map[string]interface{}
+	json.Unmarshal(jsonBytes, &jsonData)
+	processJsonData(jsonData)
 }
 
 func handleRequest(req *http.Request, err error) {
