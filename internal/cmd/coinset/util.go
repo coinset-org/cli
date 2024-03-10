@@ -12,6 +12,11 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+func isAddress(str string) bool {
+	r, err := regexp.MatchString("^(xch|txch){1}[0-9A-Za-z]{59}$", str)
+	return err == nil && r == true
+}
+
 func isHex(str string) bool {
 	r, err := regexp.MatchString("^(0x)?[0-9A-Fa-f]+$", str)
 	return err == nil && r == true
@@ -23,6 +28,13 @@ func formatHex(str string) string {
 		return str
 	}
 	return "0x" + str
+}
+
+func cleanHex(str string) string {
+	if str[:2] == "0x" {
+		return str[2:]
+	}
+	return str
 }
 
 func apiRoot() string {
@@ -54,21 +66,16 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		return
 	}
 
-	var result map[string]interface{}
 	byteResult, _ := io.ReadAll(resp.Body)
+	processJsonBytes(byteResult)
+}
 
-	if raw {
-		fmt.Println(string(byteResult))
-		return
-	}
-
-	json.Unmarshal(byteResult, &result)
-
+func processJsonData(jsonData map[string]interface{}) {
 	query, err := gojq.Parse(jq)
 	if err != nil {
 		fmt.Println(err)
 	}
-	iter := query.Run(result) // or query.RunWithContext
+	iter := query.Run(jsonData) // or query.RunWithContext
 	for {
 		v, ok := iter.Next()
 		if !ok {
@@ -84,6 +91,12 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		s, _ := f.Marshal(v)
 		fmt.Println(string(s))
 	}
+}
+
+func processJsonBytes(jsonBytes []byte) {
+	var jsonData map[string]interface{}
+	json.Unmarshal(jsonBytes, &jsonData)
+	processJsonData(jsonData)
 }
 
 func handleRequest(req *http.Request, err error) {
