@@ -45,7 +45,7 @@ var getAddressByPuzzleHashCmd = &cobra.Command{
 		jsonData := map[string]interface{}{}
 		jsonData["puzzle_hash"] = formatHex(args[0])
 
-		hexBytes, err := hex.DecodeString(args[0])
+		hexBytes, err := hex.DecodeString(cleanHex(args[0]))
 		if err != nil {
 			fmt.Println(err)
 			return
