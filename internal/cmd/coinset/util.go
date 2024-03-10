@@ -30,6 +30,13 @@ func formatHex(str string) string {
 	return "0x" + str
 }
 
+func cleanHex(str string) string {
+	if str[:2] == "0x" {
+		return str[2:]
+	}
+	return str
+}
+
 func apiRoot() string {
 	if api != "" {
 		return api
