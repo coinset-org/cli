@@ -24,8 +24,8 @@ var getNetworkSpaceCmd = &cobra.Command{
         }
         return nil
     },
-    Short: "Retrieves a block record by header hash",
-    Long:  `Retrieves a block record by header hash`,
+    Short: "Retrieves an estimate of the netspace (in bytes)",
+    Long:  `Retrieves an estimate of the netspace, which is the total plotted space of all farmers (in bytes)`,
     Run: func(cmd *cobra.Command, args []string) {
         jsonData := map[string]interface{}{}
         jsonData["older_block_header_hash"] = formatHex(args[0])
