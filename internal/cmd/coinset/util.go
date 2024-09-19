@@ -2,15 +2,14 @@ package cmd
 
 import (
 	"bytes"
-    "encoding/json"
-    "fmt"
-    "io"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
 	"regexp"
-    "io/ioutil"
-    "net/http"
 
-	"github.com/itchyny/gojq"
 	"github.com/TylerBrock/colorjson"
+	"github.com/itchyny/gojq"
 )
 
 func isHex(str string) bool {
@@ -39,7 +38,7 @@ func apiRoot() string {
 func makeRequest(rpc string, jsonData map[string]interface{}) {
 	var buf io.Reader
 	if jsonData != nil {
-	    jsonString, _ := json.Marshal(jsonData)
+		jsonString, _ := json.Marshal(jsonData)
 		buf = bytes.NewBuffer([]byte(string(jsonString)))
 	}
 	req, err := http.NewRequest("POST", apiRoot()+"/"+rpc, buf)
@@ -56,11 +55,11 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 	}
 
 	var result map[string]interface{}
-	byteResult, _ := ioutil.ReadAll(resp.Body)
+	byteResult, _ := io.ReadAll(resp.Body)
 
-	if (raw) {
-		fmt.Println(string(byteResult));
-		return;
+	if raw {
+		fmt.Println(string(byteResult))
+		return
 	}
 
 	json.Unmarshal(byteResult, &result)
