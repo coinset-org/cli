@@ -10,22 +10,20 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var crUseTestnetPrefix bool
-
 func init() {
-	getAddressByPuzzleHashCmd.Flags().BoolVarP(&crUseTestnetPrefix, "use-prefix-txch", "t", false, "use testnet prefix 'txch'")
-	getAddressByPuzzleHashCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
+	addressDecodeCmd.Flags().BoolVarP(&crUseTestnetPrefix, "use-prefix-txch", "t", false, "use testnet prefix 'txch'")
+	addressDecodeCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 		command.Flags().MarkHidden("api")
 		command.Flags().MarkHidden("mainnet")
 		command.Flags().MarkHidden("testnet")
 		command.Parent().HelpFunc()(command, strings)
 	})
 
-	rootCmd.AddCommand(getAddressByPuzzleHashCmd)
+	addressCmd.AddCommand(addressDecodeCmd)
 }
 
-var getAddressByPuzzleHashCmd = &cobra.Command{
-	Use: "get_address_by_puzzle_hash <puzzle_hash>",
+var addressDecodeCmd = &cobra.Command{
+	Use: "decode <puzzle_hash>",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
@@ -35,8 +33,8 @@ var getAddressByPuzzleHashCmd = &cobra.Command{
 		}
 		return fmt.Errorf("invalid hex value specified: %s", args[0])
 	},
-	Short: "Gets an address by puzzle hash",
-	Long:  `Gets an address by puzzle hash`,
+	Short: "Decode address from puzzle hash",
+	Long:  `Decode address from puzzle hash`,
 	Run: func(cmd *cobra.Command, args []string) {
 		prefix := "xch"
 		if crUseTestnetPrefix {
