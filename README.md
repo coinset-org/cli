@@ -5,7 +5,7 @@ This command-line interface gives you quick access to the Chia blockchain inform
 ![Demo GIF](./docs/demo.gif)
 
 
-## Installation
+## Installation (MacOS and Linux)
 
 Prebuilt binaries can be downloaded from the [Releases](https://github.com/coinset-org/cli/releases) page, or installed with *brew* or *go*.
 
@@ -29,6 +29,114 @@ git clone https://github.com/coinset-org/cli.git
 cd cli/cmd/coinset
 go build
 ```
+
+## Installation (Windows)
+
+These instructions use the `git` command line tool. If you do not have `git` installed, follow the [instructions](https://git-scm.com/download/win) to install it before continuing.
+
+### Golang Installation
+
+You will need to use Go/golang for installing coinset. To install golang, Chocolatey (similar to `apt-get` on Linux) is recommended. To install Chocolatey and golang, open a Powershell window [as an administrator](https://www.supportyourtech.com/tech/how-to-run-powershell-as-admin-windows-11-a-step-by-step-guide/), then run the following:
+
+1. Set up an execution policy:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser
+```
+
+2. You will be prompted to enter a policy. Enter the following and press `enter`:
+
+```powershell
+RemoteSigned
+```
+
+Enter `y` to allow the changes to take effect.
+
+3. To verify this change, list all policies:
+
+```powershell
+Get-ExecutionPolicy -List
+```
+
+Among the list, you should see `CurrentUser    RemoteSigned`.
+
+4. Create a new web client object:
+
+```powershell
+$script = New-Object Net.WebClient
+```
+
+5. Install Chocolatey:
+
+```powershell
+iwr https://chocolatey.org/install.ps1 -UseBasicParsing | iex
+```
+
+You should see several lines of output, including `Installing Chocolatey on the local machine`.
+
+6. Close your Powershell window and open a new one as administrator.
+
+7. Upgrade Chocolatey:
+
+```powershell
+choco upgrade chocolatey
+```
+
+You should now be using the latest version.
+
+8. Install golang:
+
+```powershell
+choco install -y golang
+```
+
+8. Close your Powershell window and open a new one (not as administrator).
+
+9. Verify that golang is installed and accessible:
+
+```powershell
+go version
+```
+
+You should be shown the current version, for example `go version go1.23.1 windows/amd64`.
+
+### Coinset Installation
+
+1. Make and change to a directory for the Coinset repository
+
+```powershell
+mkdir coinset-org
+```
+
+```powershell
+cd coinset-org
+```
+
+2. Clone this repository
+
+```powershell
+git clone https://github.com/coinset-org/cli.git
+```
+
+3. Change to the command line directory
+
+```powershell
+cd .\cli\cmd\coinset
+```
+
+4. Build coinset
+
+```powershell
+go build
+```
+
+5. To verify that the installation was successful, run
+
+```powershell
+.\coinset get_blocks 123 125
+```
+
+Be sure to include the `.\` before the `coinset` command. If you see extra characters such as `←[37m` before each line, you are likely either running Powershell as an administrator, or are not using the latest version.
 
 ## Usage
 Once installed you can access the Full Node RPC hosted at coinset.org. The first argument is the RPC name and output is automatically pretty printed. For example
