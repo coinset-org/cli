@@ -1,4 +1,4 @@
-name: goreleaser
+name: build-pr
 
 on:
   pull_request:
@@ -23,5 +23,5 @@ jobs:
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
-          version: latest
-          args: build --clean --skip-validate
+          version: ~> v1
+          args: build --clean --skip=validate
