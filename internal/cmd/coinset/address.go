@@ -12,7 +12,8 @@ func init() {
 	addressCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 		command.Flags().MarkHidden("api")
 		command.Flags().MarkHidden("mainnet")
-		command.Flags().MarkHidden("testnet")
+		command.Flags().MarkHidden("raw")
+		command.Flags().MarkHidden("query")
 		addressCmd.Parent().HelpFunc()(command, strings)
 	})
 	rootCmd.AddCommand(addressCmd)

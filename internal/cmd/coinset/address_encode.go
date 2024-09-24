@@ -1,50 +1,55 @@
 package cmd
 
 import (
-	"encoding/json"
+	"encoding/hex"
 	"fmt"
 
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
+	"github.com/chia-network/go-chia-libs/pkg/types"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	addressEncodeCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
-		command.Parent().HelpFunc()(command, strings)
-	})
-
 	addressCmd.AddCommand(addressEncodeCmd)
 }
 
 var addressEncodeCmd = &cobra.Command{
-	Use: "encode <address>",
+	Use: "encode <puzzle_hash>",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		if isAddress(args[0]) == true {
+		if isHex(args[0]) {
 			return nil
 		}
-		return fmt.Errorf("invalid address value specified: %s", args[0])
+		return fmt.Errorf("invalid hex value specified: %s", args[0])
 	},
 	Short: "Encode address to puzzle hash",
 	Long:  `Encode address to puzzle hash`,
 	Run: func(cmd *cobra.Command, args []string) {
-		jsonData := map[string]interface{}{}
-		jsonData["address"] = args[0]
-		_, puzzleHashBytes, err := bech32m.DecodePuzzleHash(args[0])
+		prefix := "xch"
+		if testnet {
+			prefix = "txch"
+		}
+		var puzzleHash = formatHex(args[0])
+		hexBytes, err := hex.DecodeString(puzzleHash[2:])
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
-		jsonData["puzzle_hash"] = puzzleHashBytes.String()
 
-		byteResult, _ := json.Marshal(jsonData)
-		if raw {
-			fmt.Println(string(byteResult))
+		hexBytes32, err := types.BytesToBytes32(hexBytes)
+		if err != nil {
+			fmt.Println(err)
 			return
 		}
 
-		processJsonData(jsonData)
+		address, err := bech32m.EncodePuzzleHash(hexBytes32, prefix)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+
+		fmt.Println(address)
 	},
 }
