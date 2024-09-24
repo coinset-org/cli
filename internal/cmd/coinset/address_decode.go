@@ -27,8 +27,8 @@ var addressDecodeCmd = &cobra.Command{
 		}
 		return fmt.Errorf("invalid address value specified: %s", args[0])
 	},
-	Short: "Decode puzzle hash to address",
-	Long:  `Decode puzzle hash to address`,
+	Short: "Decode address to puzzle hash",
+	Long:  `Decode address to puzzle hash`,
 	Run: func(cmd *cobra.Command, args []string) {
 		_, puzzleHashBytes, err := bech32m.DecodePuzzleHash(args[0])
 		if err != nil {

@@ -24,8 +24,8 @@ var addressEncodeCmd = &cobra.Command{
 		}
 		return fmt.Errorf("invalid hex value specified: %s", args[0])
 	},
-	Short: "Encode address to puzzle hash",
-	Long:  `Encode address to puzzle hash`,
+	Short: "Encode puzzle hash to address",
+	Long:  `Encode puzzle hash to address`,
 	Run: func(cmd *cobra.Command, args []string) {
 		prefix := "xch"
 		if testnet {
