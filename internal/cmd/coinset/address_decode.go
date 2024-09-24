@@ -1,21 +1,19 @@
 package cmd
 
 import (
-	"encoding/hex"
-	"encoding/json"
 	"fmt"
 
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
-	"github.com/chia-network/go-chia-libs/pkg/types"
 	"github.com/spf13/cobra"
 )
 
 func init() {
-	addressDecodeCmd.Flags().BoolVarP(&crUseTestnetPrefix, "use-prefix-txch", "t", false, "use testnet prefix 'txch'")
 	addressDecodeCmd.SetHelpFunc(func(command *cobra.Command, strings []string) {
 		command.Flags().MarkHidden("api")
 		command.Flags().MarkHidden("mainnet")
 		command.Flags().MarkHidden("testnet")
+		command.Flags().MarkHidden("raw")
+		command.Flags().MarkHidden("query")
 		command.Parent().HelpFunc()(command, strings)
 	})
 
@@ -23,51 +21,25 @@ func init() {
 }
 
 var addressDecodeCmd = &cobra.Command{
-	Use: "decode <puzzle_hash>",
+	Use: "decode <address>",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		if isHex(args[0]) == true {
+		if isAddress(args[0]) {
 			return nil
 		}
-		return fmt.Errorf("invalid hex value specified: %s", args[0])
+		return fmt.Errorf("invalid address value specified: %s", args[0])
 	},
-	Short: "Decode address from puzzle hash",
-	Long:  `Decode address from puzzle hash`,
+	Short: "Decode puzzle hash to address",
+	Long:  `Decode puzzle hash to address`,
 	Run: func(cmd *cobra.Command, args []string) {
-		prefix := "xch"
-		if crUseTestnetPrefix {
-			prefix = "txch"
-		}
-		jsonData := map[string]interface{}{}
-		jsonData["puzzle_hash"] = formatHex(args[0])
-
-		hexBytes, err := hex.DecodeString(cleanHex(args[0]))
+		_, puzzleHashBytes, err := bech32m.DecodePuzzleHash(args[0])
 		if err != nil {
 			fmt.Println(err)
 			return
 		}
 
-		hexBytes32, err := types.BytesToBytes32(hexBytes)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		address, err := bech32m.EncodePuzzleHash(hexBytes32, prefix)
-		if err != nil {
-			fmt.Println(err)
-			return
-		}
-		jsonData["address"] = address
-
-		byteResult, _ := json.Marshal(jsonData)
-		if raw {
-			fmt.Println(string(byteResult))
-			return
-		}
-
-		processJsonData(jsonData)
+		fmt.Println(puzzleHashBytes.String())
 	},
 }
