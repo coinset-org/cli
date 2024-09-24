@@ -1,9 +1,7 @@
-name: Release
+name: Build Pull Request
 
 on:
-  push:
-    tags:
-      - "*"
+  pull_request:
 
 permissions:
   contents: write
@@ -21,11 +19,9 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
-      - name: Run GoReleaser
+      - name: Run GoReleaser (Build)
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
-          version: latest
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          version: ~> v1
+          args: build --clean --skip=validate
