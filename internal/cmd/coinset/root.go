@@ -1,8 +1,8 @@
 package cmd
 
 import (
+	"net/http"
 	"os"
-    "net/http"
 
 	"github.com/spf13/cobra"
 )
@@ -12,7 +12,7 @@ var client = &http.Client{}
 var rootCmd = &cobra.Command{
 	Use:   "coinset",
 	Short: "Make Chia RPC requests",
-	Long: `Coinset is a hosted Chia API. Use this CLI to make requests to it.`,
+	Long:  `Coinset is a hosted Chia API. Use this CLI to make requests to it.`,
 }
 
 func Execute() {
@@ -40,7 +40,7 @@ var version = "dev"
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&jq, "query", "q", ".", "filter to apply using jq syntax")
 	rootCmd.PersistentFlags().BoolVar(&mainnet, "mainnet", false, "Use mainnet as the network")
-	rootCmd.PersistentFlags().BoolVar(&testnet, "testnet", false, "Use the latest testnet as the network")
+	rootCmd.PersistentFlags().BoolVarP(&testnet, "testnet", "t", false, "Use the latest testnet as the network")
 	rootCmd.PersistentFlags().StringVarP(&api, "api", "a", "", "api host to use")
 	rootCmd.PersistentFlags().BoolVarP(&raw, "raw", "r", false, "display output in raw json")
 	rootCmd.MarkFlagsMutuallyExclusive("mainnet", "testnet", "api")
