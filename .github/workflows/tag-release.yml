@@ -1,4 +1,4 @@
-name: Tag Release
+name: Tag on PR Merge
 
 on:
   push:
@@ -19,12 +19,12 @@ jobs:
         git fetch --tags
         
         # Get the latest tag from git
-        latest_tag=$(git describe --tags --abbrev=0)
+        latest_tag=$(git describe --tags --abbrev=0 --match "v*")
         echo "Latest tag: $latest_tag"
         
-        # If there are no tags, start from 1.0.0
+        # If there are no tags, start from v0.0.0
         if [ -z "$latest_tag" ]; then
-          echo "0.0.0" > latest_tag.txt
+          echo "v0.0.0" > latest_tag.txt
         else
           echo "$latest_tag" > latest_tag.txt
         fi
@@ -34,15 +34,18 @@ jobs:
       run: |
         latest_tag=$(cat latest_tag.txt)
         
+        # Remove the 'v' from the version to work with the numbers
+        version_without_v=${latest_tag#v}
+        
         # Split the tag into major, minor, and patch versions
-        IFS='.' read -r -a version_parts <<< "$latest_tag"
+        IFS='.' read -r -a version_parts <<< "$version_without_v"
         major=${version_parts[0]}
         minor=${version_parts[1]}
         patch=${version_parts[2]}
         
         # Increment the patch version
         new_patch=$((patch + 1))
-        new_version="$major.$minor.$new_patch"
+        new_version="v$major.$minor.$new_patch"
         
         echo "New version: $new_version"
         
