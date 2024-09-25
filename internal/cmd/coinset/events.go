@@ -17,10 +17,10 @@ var eventsCmd = &cobra.Command{
 	Long: `Connect to the Coinset WebSocket and display events.
 Optionally filter by event type. Valid types are:
   - peak
-  - mempool
+  - transaction
   - offer
 If no type is specified, all events will be displayed.`,
-	ValidArgs: []string{"peak", "mempool", "offer"},
+	ValidArgs: []string{"peak", "transaction", "offer"},
 	Args:      cobra.MaximumNArgs(1),
 	Run:       runEvents,
 }
