@@ -65,6 +65,10 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		return
 	}
 
+	printJson(jsonBytes)
+}
+
+func printJson(jsonBytes []byte) {
 	query, err := gojq.Parse(jq)
 	if err != nil {
 		fmt.Println(err)
