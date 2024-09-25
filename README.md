@@ -22,13 +22,10 @@ go install github.com/coinset-org/cli/cmd/coinset@latest
 ```
 
 ### Build from Source
-You can also build `coinset` from the source by cloning the repository and running `go build` in `cmd/coinset`:
-
-```bash
-git clone https://github.com/coinset-org/cli.git
-cd cli/cmd/coinset
-go build
-```
+See the detailed instructions for your operating system:
+* [MacOS](docs/install_from_source.md#macos)
+* [Linux](docs/install_from_source.md#linux)
+* [Windows](docs/install_from_source.md#windows)
 
 ## Usage
 Once installed you can access the Full Node RPC hosted at coinset.org. The first argument is the RPC name and output is automatically pretty printed. For example
