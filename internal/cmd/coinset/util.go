@@ -12,14 +12,19 @@ import (
 	"github.com/itchyny/gojq"
 )
 
+func isAddress(str string) bool {
+	r, err := regexp.MatchString("^(xch|txch){1}[0-9A-Za-z]{59}$", str)
+	return err == nil && r
+}
+
 func isHex(str string) bool {
 	r, err := regexp.MatchString("^(0x)?[0-9A-Fa-f]+$", str)
-	return err == nil && r == true
+	return err == nil && r
 }
 
 func formatHex(str string) string {
 	r, _ := regexp.MatchString("^0x[0-9A-Fa-f]+$", str)
-	if r == true {
+	if r {
 		return str
 	}
 	return "0x" + str
@@ -29,8 +34,8 @@ func apiRoot() string {
 	if api != "" {
 		return api
 	}
-	if testnet == true {
-		return "https://testnet10.coinset.org"
+	if testnet {
+		return "https://testnet11.api.coinset.org"
 	}
 	return "https://api.coinset.org"
 }
@@ -54,21 +59,25 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 		return
 	}
 
-	var result map[string]interface{}
-	byteResult, _ := io.ReadAll(resp.Body)
-
-	if raw {
-		fmt.Println(string(byteResult))
+	jsonBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
-	json.Unmarshal(byteResult, &result)
+	printJson(jsonBytes)
+}
 
+func printJson(jsonBytes []byte) {
 	query, err := gojq.Parse(jq)
 	if err != nil {
 		fmt.Println(err)
 	}
-	iter := query.Run(result) // or query.RunWithContext
+
+	var jsonStrings map[string]interface{}
+	json.Unmarshal(jsonBytes, &jsonStrings)
+
+	iter := query.Run(jsonStrings)
 	for {
 		v, ok := iter.Next()
 		if !ok {
@@ -78,14 +87,16 @@ func makeRequest(rpc string, jsonData map[string]interface{}) {
 			fmt.Println(err)
 		}
 
-		f := colorjson.NewFormatter()
-		f.Indent = 2
+		if raw {
+			s, _ := json.Marshal(v)
+			fmt.Println(string(s))
+		} else {
+			f := colorjson.NewFormatter()
+			f.Indent = 2
 
-		s, _ := f.Marshal(v)
-		fmt.Println(string(s))
+			s, _ := f.Marshal(v)
+			fmt.Println(string(s))
+		}
+
 	}
-}
-
-func handleRequest(req *http.Request, err error) {
-
 }
