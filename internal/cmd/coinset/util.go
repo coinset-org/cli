@@ -31,24 +31,29 @@ func formatHex(str string) string {
 	return "0x" + str
 }
 
-func apiHost() string {
-	if testnet {
-		return "testnet11.api.coinset.org"
+func apiRoot() string {
+	if api != "" {
+		return api
 	}
-	return "api.coinset.org"
+	if testnet {
+		return "https://testnet11.api.coinset.org"
+	}
+	return "https://api.coinset.org"
 }
 
 func makeRequest(path string, jsonData map[string]interface{}) {
 	var client *rpc.Client
 	var err error
 
+	baseUrl, err := url.Parse(apiRoot())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	if local {
 		client, err = rpc.NewClient(rpc.ConnectionModeHTTP, rpc.WithAutoConfig())
 	} else {
-		client, err = rpc.NewClient(rpc.ConnectionModePublicHTTP, rpc.WithPublicConfig(), rpc.WithBaseURL(&url.URL{
-			Scheme: "https",
-			Host:   apiHost(),
-		}))
+		client, err = rpc.NewClient(rpc.ConnectionModePublicHTTP, rpc.WithPublicConfig(), rpc.WithBaseURL(baseUrl))
 	}
 
 	if err != nil {
