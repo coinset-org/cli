@@ -38,13 +38,6 @@ func apiHost() string {
 	return "api.coinset.org"
 }
 
-func apiRoot() string {
-	if api != "" {
-		return api
-	}
-	return fmt.Sprintf("https://%s", apiHost())
-}
-
 func makeRequest(path string, jsonData map[string]interface{}) {
 	var client *rpc.Client
 	var err error
