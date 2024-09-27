@@ -1,14 +1,15 @@
 package cmd
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
-	"net/http"
+	"log"
+	"net/url"
 	"regexp"
 
 	"github.com/TylerBrock/colorjson"
+	"github.com/chia-network/go-chia-libs/pkg/rpc"
+	"github.com/chia-network/go-chia-libs/pkg/rpcinterface"
 	"github.com/itchyny/gojq"
 )
 
@@ -40,32 +41,37 @@ func apiRoot() string {
 	return "https://api.coinset.org"
 }
 
-func makeRequest(rpc string, jsonData map[string]interface{}) {
-	var buf io.Reader
-	if jsonData != nil {
-		jsonString, _ := json.Marshal(jsonData)
-		buf = bytes.NewBuffer([]byte(string(jsonString)))
-	}
-	req, err := http.NewRequest("POST", apiRoot()+"/"+rpc, buf)
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	req.Header.Add("Content-Type", `application/json"`)
+func makeRequest(path string, jsonData map[string]interface{}) {
+	var client *rpc.Client
+	var err error
 
-	resp, err := client.Do(req)
+	baseUrl, err := url.Parse(apiRoot())
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err.Error())
 	}
 
-	jsonBytes, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println(err)
-		return
+	if local {
+		client, err = rpc.NewClient(rpc.ConnectionModeHTTP, rpc.WithAutoConfig())
+	} else {
+		client, err = rpc.NewClient(rpc.ConnectionModePublicHTTP, rpc.WithPublicConfig(), rpc.WithBaseURL(baseUrl))
 	}
 
-	printJson(jsonBytes)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	req, err := client.FullNodeService.NewRequest(rpcinterface.Endpoint(path), jsonData)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	jsonResponse := json.RawMessage{}
+	_, err = client.FullNodeService.Do(req, &jsonResponse)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
+	printJson(jsonResponse)
 }
 
 func printJson(jsonBytes []byte) {
