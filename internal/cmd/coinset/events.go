@@ -3,6 +3,7 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"time"
@@ -40,10 +41,15 @@ func runEvents(cmd *cobra.Command, args []string) {
 		eventType = args[0]
 	}
 
-	c, _, err := websocket.DefaultDialer.Dial("wss://api.coinset.org/ws", nil)
+	endpoint := fmt.Sprintf("wss://%s/ws", apiHost())
+
+	if api != "" {
+		endpoint = api
+	}
+
+	c, _, err := websocket.DefaultDialer.Dial(endpoint, nil)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatal(err.Error())
 	}
 	defer c.Close()
 

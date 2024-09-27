@@ -31,6 +31,14 @@ func formatHex(str string) string {
 	return "0x" + str
 }
 
+func apiHost() string {
+	baseUrl, err := url.Parse(apiRoot())
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	return baseUrl.Host
+}
+
 func apiRoot() string {
 	if api != "" {
 		return api
