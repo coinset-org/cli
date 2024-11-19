@@ -78,6 +78,35 @@ $ coinset get_coin_records_by_parent_ids 0xa908ee64a5821b7bda5d798c053a79c8b3d7c
 }
 ```
 
+### Coin IDs
+
+Using the `coin_id` command you can encode coin IDs. For example:
+
+```bash
+coinset coin_id 0xeca65946d1b80b527bcab5e94673f30bb3fd8a9466b31379fa5fa1f49c492031 0x66e55285340258cb79e6eda4d16f230bec2df7a2d7b40b8c6268247be9e659cb 2000000007
+```
+```bash
+0xce2a2dd052bdbcf7fffc309e2a5e1f8589513335f85232a6c8cfb4a7d49ee32b
+```
+
+### Address Encoding
+
+Using the `address` command you can encode and decode adresses. For example:
+
+```bash
+coinset address encode 0xbf3d35bba83d984be6cc4db0d6c84922e275a39ca4f8e1dd3cddfe2fa5eb2e2f
+```
+```bash
+xch1hu7ntwag8kvyhekvfkcddjzfyt38tguu5nuwrhfumhlzlf0t9chs6cj5k8
+```
+
+```bash
+coinset address decode xch1hu7ntwag8kvyhekvfkcddjzfyt38tguu5nuwrhfumhlzlf0t9chs6cj5k8
+```
+```bash
+0xbf3d35bba83d984be6cc4db0d6c84922e275a39ca4f8e1dd3cddfe2fa5eb2e2f
+```
+
 ### JQ Filtering
 
 Using the `-q` option you can pass in a jq filter to be used on the output. For example:
