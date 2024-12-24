@@ -22,10 +22,7 @@ var addressDecodeCmd = &cobra.Command{
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		if isAddress(args[0]) {
-			return nil
-		}
-		return fmt.Errorf("invalid address value specified: %s", args[0])
+		return nil
 	},
 	Short: "Decode address to puzzle hash",
 	Long:  `Decode address to puzzle hash`,

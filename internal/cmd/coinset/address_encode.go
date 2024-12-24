@@ -10,6 +10,7 @@ import (
 )
 
 func init() {
+	addressEncodeCmd.Flags().StringP("prefix", "p", "", "Bech32 prefix")
 	addressCmd.AddCommand(addressEncodeCmd)
 }
 
@@ -27,9 +28,13 @@ var addressEncodeCmd = &cobra.Command{
 	Short: "Encode puzzle hash to address",
 	Long:  `Encode puzzle hash to address`,
 	Run: func(cmd *cobra.Command, args []string) {
-		prefix := "xch"
-		if testnet {
-			prefix = "txch"
+		prefix, _ := cmd.Flags().GetString("prefix")
+		if prefix == "" {
+			if testnet {
+				prefix = "txch"
+			} else {
+				prefix = "xch"
+			}
 		}
 		var puzzleHash = formatHex(args[0])
 		hexBytes, err := hex.DecodeString(puzzleHash[2:])
