@@ -6,11 +6,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	getMempoolItemsByCoinNameIncludeSpentCoins bool
+)
+
 func init() {
-	rootCmd.AddCommand(getMempoolItemsByCoinName)
+	getMempoolItemsByCoinNameCmd.Flags().BoolVarP(&getMempoolItemsByCoinNameIncludeSpentCoins, "include-spent-coins", "s", false, "Include items no longer in the mempool")
+	rootCmd.AddCommand(getMempoolItemsByCoinNameCmd)
 }
 
-var getMempoolItemsByCoinName = &cobra.Command{
+var getMempoolItemsByCoinNameCmd = &cobra.Command{
 	Use: "get_mempool_items_by_coin_name <coin_name>",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
@@ -26,6 +31,9 @@ var getMempoolItemsByCoinName = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonData := map[string]interface{}{}
 		jsonData["coin_name"] = formatHex(args[0])
+		if getMempoolItemsByCoinNameIncludeSpentCoins {
+			jsonData["include_spent_coins"] = true
+		}
 		makeRequest("get_mempool_items_by_coin_name", jsonData)
 	},
 }
