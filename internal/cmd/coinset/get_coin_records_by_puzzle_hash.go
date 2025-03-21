@@ -14,8 +14,8 @@ var (
 
 func init() {
 	getCoinRecordsByPuzzleHashCmd.Flags().BoolVarP(&crByPuzzleHashIncludeSpentCoins, "include-spent-coins", "s", false, "Include spent coins")
-	getCoinRecordsByPuzzleHashCmd.Flags().IntVarP(&crByPuzzleHashStart, "start", "", -1, "Start height")
-	getCoinRecordsByPuzzleHashCmd.Flags().IntVarP(&crByPuzzleHashEnd, "end", "", -1, "End height")
+	getCoinRecordsByPuzzleHashCmd.Flags().IntVarP(&crByPuzzleHashStart, "start-height", "", -1, "Start height")
+	getCoinRecordsByPuzzleHashCmd.Flags().IntVarP(&crByPuzzleHashEnd, "end-height", "", -1, "End height")
 	rootCmd.AddCommand(getCoinRecordsByPuzzleHashCmd)
 }
 

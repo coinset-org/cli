@@ -17,8 +17,8 @@ func init() {
 
     // Define flags for the optional arguments
     getCoinRecordsByParentIdsCmd.Flags().BoolVarP(&crByParentIdsIncludeSpentCoins, "include-spent-coins", "s", false, "Include spent coins")
-    getCoinRecordsByParentIdsCmd.Flags().IntVarP(&crByParentIdsStart, "start", "", -1, "Start height")
-    getCoinRecordsByParentIdsCmd.Flags().IntVarP(&crByParentIdsEnd, "end", "", -1, "End height")
+    getCoinRecordsByParentIdsCmd.Flags().IntVarP(&crByParentIdsStart, "start-height", "", -1, "Start height")
+    getCoinRecordsByParentIdsCmd.Flags().IntVarP(&crByParentIdsEnd, "end-height", "", -1, "End height")
 }
 
 var getCoinRecordsByParentIdsCmd = &cobra.Command{

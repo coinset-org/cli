@@ -17,8 +17,8 @@ func init() {
 
 	// Define flags for the optional arguments
 	getCoinRecordsByHintCmd.Flags().BoolVarP(&crByHintCmdIncludeSpentCoins, "include-spent-coins", "s", false, "Include spent coins")
-	getCoinRecordsByHintCmd.Flags().IntVarP(&crByHintCmdStart, "start", "", -1, "Start height")
-	getCoinRecordsByHintCmd.Flags().IntVarP(&crByHintCmdEnd, "end", "", -1, "End height")
+	getCoinRecordsByHintCmd.Flags().IntVarP(&crByHintCmdStart, "start-height", "", -1, "Start height")
+	getCoinRecordsByHintCmd.Flags().IntVarP(&crByHintCmdEnd, "end-height", "", -1, "End height")
 }
 
 var getCoinRecordsByHintCmd = &cobra.Command{
