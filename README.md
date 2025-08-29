@@ -78,34 +78,48 @@ $ coinset get_coin_records_by_parent_ids 0xa908ee64a5821b7bda5d798c053a79c8b3d7c
 }
 ```
 
-### Coin IDs
+## Available Commands
 
-Using the `coin_id` command you can encode coin IDs. For example:
+The following table shows all available CLI commands organized by functionality:
 
-```bash
-coinset coin_id 0xeca65946d1b80b527bcab5e94673f30bb3fd8a9466b31379fa5fa1f49c492031 0x66e55285340258cb79e6eda4d16f230bec2df7a2d7b40b8c6268247be9e659cb 2000000007
-```
-```bash
-0xce2a2dd052bdbcf7fffc309e2a5e1f8589513335f85232a6c8cfb4a7d49ee32b
-```
+| Category | Command | Description |
+|----------|---------|-------------|
+| **Address Operations** | `address encode <puzzle_hash>` | Encode puzzle hash to address |
+| | `address decode <address>` | Decode address to puzzle hash |
+| **Coin Operations** | `coin_id <parent_coin_id> <puzzle_hash> <amount>` | Compute a coin ID from parent, puzzle hash and amount |
+| | `get_coin_record_by_name <coin_name>` | Retrieve a coin record by its name |
+| | `get_coin_records_by_hint <hint>` | Retrieve coin records by hint |
+| | `get_coin_records_by_hints <hints>` | Retrieve coin records by multiple hints |
+| | `get_coin_records_by_names <coin_names>` | Retrieve coin records by multiple names |
+| | `get_coin_records_by_parent_ids <parent_ids>` | Retrieve coin records by parent IDs |
+| | `get_coin_records_by_puzzle_hash <puzzle_hash>` | Retrieve coin records by puzzle hash |
+| | `get_coin_records_by_puzzle_hashes <puzzle_hashes>` | Retrieve coin records by multiple puzzle hashes |
+| **Block Operations** | `get_block <header_hash>` | Retrieve a full block by header hash |
+| | `get_blocks <start_height> <end_height>` | Retrieve multiple blocks in a height range |
+| | `get_block_record <header_hash>` | Retrieve a block record by header hash |
+| | `get_block_records <start_height> <end_height>` | Retrieve multiple block records in a height range |
+| | `get_block_record_by_height <height>` | Retrieve a block record by height |
+| | `get_block_spends <header_hash>` | Retrieve block spends by header hash |
+| | `get_block_spends_with_conditions <header_hash>` | Retrieve block spends with conditions by header hash |
+| | `get_unfinished_block_headers` | Retrieve unfinished block headers |
+| **Blockchain State & Network** | `get_blockchain_state` | Retrieve the current blockchain state |
+| | `get_network_info` | Retrieve information about the current network |
+| | `get_network_space <newer_block_header_hash> <older_block_header_hash>` | Retrieve network space between two blocks |
+| | `get_block_count_metrics` | Retrieve block count metrics |
+| **Mempool Operations** | `get_all_mempool_items` | Retrieve all mempool items |
+| | `get_all_mempool_tx_ids` | Retrieve all mempool transaction IDs |
+| | `get_mempool_item_by_tx_id <tx_id>` | Retrieve a specific mempool item by transaction ID |
+| | `get_mempool_items_by_coin_name <coin_name>` | Retrieve mempool items by coin name |
+| **Transaction Operations** | `push_tx [spend_bundle_json]` | Push a spend bundle to the mempool |
+| | `get_fee_estimate <target_times> <cost>` | Get fee estimate for transaction |
+| | `get_additions_and_removals <header_hash>` | Get additions and removals for a block |
+| | `get_aggsig_additional_data <spend_bundle>` | Get aggregate signature additional data |
+| **Puzzle & Solution** | `get_puzzle_and_solution <coin_name> <height>` | Retrieve puzzle and solution for a coin |
+| | `get_puzzle_and_solution_with_conditions <coin_name> <height>` | Retrieve puzzle and solution with conditions for a coin |
+| **Memos & Metadata** | `get_memos_by_coin_name <coin_name>` | Retrieve memos associated with a coin |
+| **Events & Real-time** | `events [type]` | Connect to WebSocket and display events (peak, transaction, offer) |
+| **Utility** | `version` | Display the version number of coinset |
 
-### Address Encoding
-
-Using the `address` command you can encode and decode adresses. For example:
-
-```bash
-coinset address encode 0xbf3d35bba83d984be6cc4db0d6c84922e275a39ca4f8e1dd3cddfe2fa5eb2e2f
-```
-```bash
-xch1hu7ntwag8kvyhekvfkcddjzfyt38tguu5nuwrhfumhlzlf0t9chs6cj5k8
-```
-
-```bash
-coinset address decode xch1hu7ntwag8kvyhekvfkcddjzfyt38tguu5nuwrhfumhlzlf0t9chs6cj5k8
-```
-```bash
-0xbf3d35bba83d984be6cc4db0d6c84922e275a39ca4f8e1dd3cddfe2fa5eb2e2f
-```
 
 ### JQ Filtering
 
