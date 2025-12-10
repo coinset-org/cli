@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -20,21 +18,23 @@ func init() {
 }
 
 var getCoinRecordsByPuzzleHashCmd = &cobra.Command{
-	Use: "get_coin_records_by_puzzle_hash <hash>",
+	Use: "get_coin_records_by_puzzle_hash <puzzle_hash_or_address>",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		if isHex(args[0]) {
-			return nil
+		_, err := convertAddressOrPuzzleHash(args[0])
+		if err != nil {
+			return err
 		}
-		return fmt.Errorf("invalid hex value specified: %s", args[0])
+		return nil
 	},
-	Short: "Retrieves coin records by their puzzle hash",
-	Long:  "Retrieves coin records by their puzzle hash",
+	Short: "Retrieves coin records by their puzzle hash or address",
+	Long:  "Retrieves coin records by their puzzle hash or address",
 	Run: func(cmd *cobra.Command, args []string) {
+		puzzleHash, _ := convertAddressOrPuzzleHash(args[0])
 		jsonData := map[string]interface{}{}
-		jsonData["puzzle_hash"] = formatHex(args[0])
+		jsonData["puzzle_hash"] = puzzleHash
 		if crByPuzzleHashIncludeSpentCoins {
 			jsonData["include_spent_coins"] = true
 		}
