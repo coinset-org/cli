@@ -8,6 +8,7 @@ import (
 	"regexp"
 
 	"github.com/TylerBrock/colorjson"
+	"github.com/chia-network/go-chia-libs/pkg/bech32m"
 	"github.com/chia-network/go-chia-libs/pkg/rpc"
 	"github.com/chia-network/go-chia-libs/pkg/rpcinterface"
 	"github.com/itchyny/gojq"
@@ -29,6 +30,20 @@ func formatHex(str string) string {
 		return str
 	}
 	return "0x" + str
+}
+
+func convertAddressOrPuzzleHash(input string) (string, error) {
+	if isAddress(input) {
+		_, puzzleHashBytes, err := bech32m.DecodePuzzleHash(input)
+		if err != nil {
+			return "", fmt.Errorf("invalid address: %v", err)
+		}
+		return puzzleHashBytes.String(), nil
+	} else if isHex(input) {
+		return formatHex(input), nil
+	} else {
+		return "", fmt.Errorf("invalid input: must be either a Chia address or hex puzzle hash")
+	}
 }
 
 func apiHost() string {

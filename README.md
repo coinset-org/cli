@@ -92,8 +92,8 @@ The following table shows all available CLI commands organized by functionality:
 | | `get_coin_records_by_hints <hints>` | Retrieve coin records by multiple hints |
 | | `get_coin_records_by_names <coin_names>` | Retrieve coin records by multiple names |
 | | `get_coin_records_by_parent_ids <parent_ids>` | Retrieve coin records by parent IDs |
-| | `get_coin_records_by_puzzle_hash <puzzle_hash>` | Retrieve coin records by puzzle hash |
-| | `get_coin_records_by_puzzle_hashes <puzzle_hashes>` | Retrieve coin records by multiple puzzle hashes |
+| | `get_coin_records_by_puzzle_hash <puzzle_hash_or_address>` | Retrieve coin records by puzzle hash or address |
+| | `get_coin_records_by_puzzle_hashes <puzzle_hash_or_address> ...` | Retrieve coin records by multiple puzzle hashes or addressees |
 | **Block Operations** | `get_block <header_hash>` | Retrieve a full block by header hash |
 | | `get_blocks <start_height> <end_height>` | Retrieve multiple blocks in a height range |
 | | `get_block_record <header_hash>` | Retrieve a block record by header hash |
