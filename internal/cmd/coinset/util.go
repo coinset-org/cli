@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/url"
 	"regexp"
+	"strconv"
 
 	"github.com/TylerBrock/colorjson"
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
@@ -46,6 +47,44 @@ func convertAddressOrPuzzleHash(input string) (string, error) {
 	}
 }
 
+func convertHeightOrHeaderHash(input string) (string, error) {
+	if height, err := strconv.Atoi(input); err == nil {
+		return getHeaderHashByHeight(height)
+	} else if isHex(input) {
+		return formatHex(input), nil
+	} else {
+		return "", fmt.Errorf("invalid input: must be either a block height (number) or hex header hash")
+	}
+}
+
+func getHeaderHashByHeight(height int) (string, error) {
+	jsonData := map[string]interface{}{
+		"height": height,
+	}
+
+	jsonResponse, err := doRpc("get_block_record_by_height", jsonData)
+	if err != nil {
+		return "", fmt.Errorf("failed to get block record by height %d: %v", height, err)
+	}
+
+	var response map[string]interface{}
+	if err := json.Unmarshal(jsonResponse, &response); err != nil {
+		return "", fmt.Errorf("failed to parse response: %v", err)
+	}
+
+	blockRecord, ok := response["block_record"].(map[string]interface{})
+	if !ok {
+		return "", fmt.Errorf("invalid response format from get_block_record_by_height")
+	}
+
+	headerHash, ok := blockRecord["header_hash"].(string)
+	if !ok {
+		return "", fmt.Errorf("header_hash not found in block record")
+	}
+
+	return headerHash, nil
+}
+
 func apiHost() string {
 	baseUrl, err := url.Parse(apiRoot())
 	if err != nil {
@@ -64,13 +103,13 @@ func apiRoot() string {
 	return "https://api.coinset.org"
 }
 
-func makeRequest(path string, jsonData map[string]interface{}) {
+func doRpc(path string, jsonData map[string]interface{}) (json.RawMessage, error) {
 	var client *rpc.Client
 	var err error
 
 	baseUrl, err := url.Parse(apiRoot())
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, fmt.Errorf("failed to parse API URL: %v", err)
 	}
 
 	if local {
@@ -80,20 +119,28 @@ func makeRequest(path string, jsonData map[string]interface{}) {
 	}
 
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, fmt.Errorf("failed to create RPC client: %v", err)
 	}
 
 	req, err := client.FullNodeService.NewRequest(rpcinterface.Endpoint(path), jsonData)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, fmt.Errorf("failed to create request: %v", err)
 	}
 
 	jsonResponse := json.RawMessage{}
 	_, err = client.FullNodeService.Do(req, &jsonResponse)
 	if err != nil {
-		log.Fatal(err.Error())
+		return nil, fmt.Errorf("request failed: %v", err)
 	}
 
+	return jsonResponse, nil
+}
+
+func makeRequest(path string, jsonData map[string]interface{}) {
+	jsonResponse, err := doRpc(path, jsonData)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 	printJson(jsonResponse)
 }
 
