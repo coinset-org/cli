@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/spf13/cobra"
 )
 
@@ -11,21 +9,23 @@ func init() {
 }
 
 var getBlockRecordCmd = &cobra.Command{
-	Use: "get_block_record <header_hash>",
+	Use: "get_block_record <height_or_header_hash>",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
 			return err
 		}
-		if isHex(args[0]) {
-			return nil
+		_, err := convertHeightOrHeaderHash(args[0])
+		if err != nil {
+			return err
 		}
-		return fmt.Errorf("invalid hex value specified: %s", args[0])
+		return nil
 	},
-	Short: "Retrieves a block record by header hash",
-	Long:  "Retrieves a block record by header hash",
+	Short: "Retrieves a block record by height or header hash",
+	Long:  "Retrieves a block record by height or header hash",
 	Run: func(cmd *cobra.Command, args []string) {
+		headerHash, _ := convertHeightOrHeaderHash(args[0])
 		jsonData := map[string]interface{}{}
-		jsonData["header_hash"] = formatHex(args[0])
+		jsonData["header_hash"] = headerHash
 		makeRequest("get_block_record", jsonData)
 	},
 }
