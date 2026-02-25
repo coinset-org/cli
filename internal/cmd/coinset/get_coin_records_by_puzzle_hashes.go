@@ -10,12 +10,18 @@ var (
 	crByPuzzleHashesIncludeSpentCoins bool
 	crByPuzzleHashesStart             int
 	crByPuzzleHashesEnd               int
+	crByPuzzleHashesCursor            string
+	crByPuzzleHashesLimit             int
+	crByPuzzleHashesOrder             string
 )
 
 func init() {
 	getCoinRecordsByPuzzleHashesCmd.Flags().BoolVarP(&crByPuzzleHashesIncludeSpentCoins, "include-spent-coins", "s", false, "Include spent coins")
 	getCoinRecordsByPuzzleHashesCmd.Flags().IntVarP(&crByPuzzleHashesStart, "start-height", "", -1, "Start height")
 	getCoinRecordsByPuzzleHashesCmd.Flags().IntVarP(&crByPuzzleHashesEnd, "end-height", "", -1, "End height")
+	getCoinRecordsByPuzzleHashesCmd.Flags().StringVar(&crByPuzzleHashesCursor, "cursor", "", "Pagination cursor from a previous truncated response")
+	getCoinRecordsByPuzzleHashesCmd.Flags().IntVar(&crByPuzzleHashesLimit, "limit", 0, "Maximum number of records to return")
+	getCoinRecordsByPuzzleHashesCmd.Flags().StringVar(&crByPuzzleHashesOrder, "order", "", `Result order: "asc" or "desc"`)
 	rootCmd.AddCommand(getCoinRecordsByPuzzleHashesCmd)
 }
 
@@ -30,6 +36,12 @@ var getCoinRecordsByPuzzleHashesCmd = &cobra.Command{
 			if err != nil {
 				return fmt.Errorf("invalid input '%s': %v", input, err)
 			}
+		}
+		if crByPuzzleHashesLimit < 0 {
+			return fmt.Errorf("limit must be >= 1 when provided")
+		}
+		if crByPuzzleHashesOrder != "" && !isAscOrDesc(crByPuzzleHashesOrder) {
+			return fmt.Errorf(`invalid order %q: must be "asc" or "desc"`, crByPuzzleHashesOrder)
 		}
 		return nil
 	},
@@ -52,6 +64,15 @@ var getCoinRecordsByPuzzleHashesCmd = &cobra.Command{
 		}
 		if crByPuzzleHashesEnd != -1 {
 			jsonData["end_height"] = crByPuzzleHashesEnd
+		}
+		if crByPuzzleHashesCursor != "" {
+			jsonData["cursor"] = crByPuzzleHashesCursor
+		}
+		if crByPuzzleHashesLimit > 0 {
+			jsonData["limit"] = crByPuzzleHashesLimit
+		}
+		if crByPuzzleHashesOrder != "" {
+			jsonData["order"] = crByPuzzleHashesOrder
 		}
 		makeRequest("get_coin_records_by_puzzle_hashes", jsonData)
 	},

@@ -1,0 +1,43 @@
+package cmd
+
+import "github.com/spf13/cobra"
+
+var (
+	getCatCoinsByAssetIDIncludeSpentCoins bool
+	getCatCoinsByAssetIDCursor            string
+	getCatCoinsByAssetIDLimit             int
+	getCatCoinsByAssetIDOrder             string
+)
+
+func init() {
+	getCatCoinsByAssetIDCmd.Flags().BoolVar(&getCatCoinsByAssetIDIncludeSpentCoins, "include-spent-coins", false, "Include spent coins")
+	getCatCoinsByAssetIDCmd.Flags().StringVar(&getCatCoinsByAssetIDCursor, "cursor", "", "Pagination cursor from a previous response")
+	getCatCoinsByAssetIDCmd.Flags().IntVar(&getCatCoinsByAssetIDLimit, "limit", 0, "Maximum number of records to return")
+	getCatCoinsByAssetIDCmd.Flags().StringVar(&getCatCoinsByAssetIDOrder, "order", "", `Result order: "asc" or "desc"`)
+	rootCmd.AddCommand(getCatCoinsByAssetIDCmd)
+}
+
+var getCatCoinsByAssetIDCmd = &cobra.Command{
+	Use:   "get_cat_coins_by_asset_id <asset_id>",
+	Short: "List CAT coins by asset id",
+	Args: func(cmd *cobra.Command, args []string) error {
+		if err := cobra.ExactArgs(1)(cmd, args); err != nil {
+			return err
+		}
+		if _, err := normalizeHexArg(args[0], "asset_id"); err != nil {
+			return err
+		}
+		return applyPaginationOptions(map[string]interface{}{}, getCatCoinsByAssetIDCursor, getCatCoinsByAssetIDLimit, getCatCoinsByAssetIDOrder)
+	},
+	Run: func(cmd *cobra.Command, args []string) {
+		assetID, _ := normalizeHexArg(args[0], "asset_id")
+		jsonData := map[string]interface{}{
+			"asset_id": assetID,
+		}
+		if getCatCoinsByAssetIDIncludeSpentCoins {
+			jsonData["include_spent_coins"] = true
+		}
+		_ = applyPaginationOptions(jsonData, getCatCoinsByAssetIDCursor, getCatCoinsByAssetIDLimit, getCatCoinsByAssetIDOrder)
+		makeRequest("get_cat_coins_by_asset_id", jsonData)
+	},
+}

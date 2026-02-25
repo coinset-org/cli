@@ -37,6 +37,10 @@ func formatHex(str string) string {
 	return "0x" + str
 }
 
+func isAscOrDesc(order string) bool {
+	return order == "asc" || order == "desc"
+}
+
 func convertAddressOrPuzzleHash(input string) (string, error) {
 	if isAddress(input) {
 		_, puzzleHashBytes, err := bech32m.DecodePuzzleHash(input)

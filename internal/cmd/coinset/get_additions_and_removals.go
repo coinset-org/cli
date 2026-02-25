@@ -1,10 +1,23 @@
 package cmd
 
 import (
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
+var (
+	getAdditionsAndRemovalsCursor string
+	getAdditionsAndRemovalsLimit  int
+	getAdditionsAndRemovalsOrder  string
+	getAdditionsAndRemovalsFilter string
+)
+
 func init() {
+	getAdditionsAndRemovalsCmd.Flags().StringVar(&getAdditionsAndRemovalsCursor, "cursor", "", "Pagination cursor from a previous truncated response")
+	getAdditionsAndRemovalsCmd.Flags().IntVar(&getAdditionsAndRemovalsLimit, "limit", 0, "Maximum number of records to return")
+	getAdditionsAndRemovalsCmd.Flags().StringVar(&getAdditionsAndRemovalsOrder, "order", "", `Record order: "asc" or "desc"`)
+	getAdditionsAndRemovalsCmd.Flags().StringVar(&getAdditionsAndRemovalsFilter, "filter", "", `Filter records: "all", "additions", or "removals"`)
 	rootCmd.AddCommand(getAdditionsAndRemovalsCmd)
 }
 
@@ -18,6 +31,18 @@ var getAdditionsAndRemovalsCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+		if getAdditionsAndRemovalsLimit < 0 {
+			return fmt.Errorf("limit must be >= 1 when provided")
+		}
+		if getAdditionsAndRemovalsOrder != "" && !isAscOrDesc(getAdditionsAndRemovalsOrder) {
+			return fmt.Errorf(`invalid order %q: must be "asc" or "desc"`, getAdditionsAndRemovalsOrder)
+		}
+		if getAdditionsAndRemovalsFilter != "" &&
+			getAdditionsAndRemovalsFilter != "all" &&
+			getAdditionsAndRemovalsFilter != "additions" &&
+			getAdditionsAndRemovalsFilter != "removals" {
+			return fmt.Errorf(`invalid filter %q: must be "all", "additions", or "removals"`, getAdditionsAndRemovalsFilter)
+		}
 		return nil
 	},
 	Short: "Retrieves the additions and removals for a certain block",
@@ -26,6 +51,18 @@ var getAdditionsAndRemovalsCmd = &cobra.Command{
 		headerHash, _ := convertHeightOrHeaderHash(args[0])
 		jsonData := map[string]interface{}{}
 		jsonData["header_hash"] = headerHash
+		if getAdditionsAndRemovalsCursor != "" {
+			jsonData["cursor"] = getAdditionsAndRemovalsCursor
+		}
+		if getAdditionsAndRemovalsLimit > 0 {
+			jsonData["limit"] = getAdditionsAndRemovalsLimit
+		}
+		if getAdditionsAndRemovalsOrder != "" {
+			jsonData["order"] = getAdditionsAndRemovalsOrder
+		}
+		if getAdditionsAndRemovalsFilter != "" {
+			jsonData["filter"] = getAdditionsAndRemovalsFilter
+		}
 		makeRequest("get_additions_and_removals", jsonData)
 	},
 }
