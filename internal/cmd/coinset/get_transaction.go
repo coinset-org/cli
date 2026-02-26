@@ -2,7 +2,10 @@ package cmd
 
 import "github.com/spf13/cobra"
 
+var getTransactionPretty bool
+
 func init() {
+	getTransactionCmd.Flags().BoolVarP(&getTransactionPretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getTransactionCmd)
 }
 
@@ -18,8 +21,8 @@ var getTransactionCmd = &cobra.Command{
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		txID, _ := normalizeHexArg(args[0], "tx_id")
-		makeRequest("get_transaction", map[string]interface{}{
+		makeTransactionRequest("get_transaction", map[string]interface{}{
 			"tx_id": txID,
-		})
+		}, getTransactionPretty)
 	},
 }

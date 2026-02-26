@@ -152,6 +152,9 @@ The following table shows all available CLI commands organized by functionality:
 | **Events & Real-time** | `events [type]` | Connect to WebSocket and display events (`peak`, `transaction`, `offer`, `balance`, `dashboard`) |
 | **Utility** | `version` | Display the version number of coinset |
 
+Transaction summary commands support `-p, --pretty` to render expanded human-friendly output
+(`TX` header + `Activity` event lines + detailed event sections) instead of JSON.
+
 ### Smoke Test Checklist
 
 - `coinset get_coin_records_by_puzzle_hash <puzzle_hash_or_address> --limit 5 --order desc`

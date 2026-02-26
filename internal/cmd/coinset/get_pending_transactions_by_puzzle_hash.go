@@ -6,12 +6,14 @@ var (
 	getPendingTransactionsByPuzzleHashCursor string
 	getPendingTransactionsByPuzzleHashLimit  int
 	getPendingTransactionsByPuzzleHashOrder  string
+	getPendingTransactionsByPuzzleHashPretty bool
 )
 
 func init() {
 	getPendingTransactionsByPuzzleHashCmd.Flags().StringVar(&getPendingTransactionsByPuzzleHashCursor, "cursor", "", "Pagination cursor from a previous response")
 	getPendingTransactionsByPuzzleHashCmd.Flags().IntVar(&getPendingTransactionsByPuzzleHashLimit, "limit", 0, "Maximum number of records to return")
 	getPendingTransactionsByPuzzleHashCmd.Flags().StringVar(&getPendingTransactionsByPuzzleHashOrder, "order", "", `Result order: "asc" or "desc"`)
+	getPendingTransactionsByPuzzleHashCmd.Flags().BoolVarP(&getPendingTransactionsByPuzzleHashPretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getPendingTransactionsByPuzzleHashCmd)
 }
 
@@ -33,6 +35,6 @@ var getPendingTransactionsByPuzzleHashCmd = &cobra.Command{
 			"p2": p2,
 		}
 		_ = applyPaginationOptions(jsonData, getPendingTransactionsByPuzzleHashCursor, getPendingTransactionsByPuzzleHashLimit, getPendingTransactionsByPuzzleHashOrder)
-		makeRequest("get_pending_transactions_by_puzzle_hash", jsonData)
+		makeTransactionRequest("get_pending_transactions_by_puzzle_hash", jsonData, getPendingTransactionsByPuzzleHashPretty)
 	},
 }

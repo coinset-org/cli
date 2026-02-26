@@ -11,12 +11,14 @@ var (
 	getBlockTransactionsCursor string
 	getBlockTransactionsLimit  int
 	getBlockTransactionsOrder  string
+	getBlockTransactionsPretty bool
 )
 
 func init() {
 	getBlockTransactionsCmd.Flags().StringVar(&getBlockTransactionsCursor, "cursor", "", "Pagination cursor from a previous response")
 	getBlockTransactionsCmd.Flags().IntVar(&getBlockTransactionsLimit, "limit", 0, "Maximum number of records to return")
 	getBlockTransactionsCmd.Flags().StringVar(&getBlockTransactionsOrder, "order", "", `Result order: "asc" or "desc"`)
+	getBlockTransactionsCmd.Flags().BoolVarP(&getBlockTransactionsPretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getBlockTransactionsCmd)
 }
 
@@ -43,6 +45,6 @@ var getBlockTransactionsCmd = &cobra.Command{
 		}
 
 		_ = applyPaginationOptions(jsonData, getBlockTransactionsCursor, getBlockTransactionsLimit, getBlockTransactionsOrder)
-		makeRequest("get_block_transactions", jsonData)
+		makeTransactionRequest("get_block_transactions", jsonData, getBlockTransactionsPretty)
 	},
 }

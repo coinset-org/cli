@@ -6,12 +6,14 @@ var (
 	getTransactionsByP2Cursor string
 	getTransactionsByP2Limit  int
 	getTransactionsByP2Order  string
+	getTransactionsByP2Pretty bool
 )
 
 func init() {
 	getTransactionsByP2Cmd.Flags().StringVar(&getTransactionsByP2Cursor, "cursor", "", "Pagination cursor from a previous response")
 	getTransactionsByP2Cmd.Flags().IntVar(&getTransactionsByP2Limit, "limit", 0, "Maximum number of records to return")
 	getTransactionsByP2Cmd.Flags().StringVar(&getTransactionsByP2Order, "order", "", `Result order: "asc" or "desc"`)
+	getTransactionsByP2Cmd.Flags().BoolVarP(&getTransactionsByP2Pretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getTransactionsByP2Cmd)
 }
 
@@ -33,6 +35,6 @@ var getTransactionsByP2Cmd = &cobra.Command{
 			"p2": p2,
 		}
 		_ = applyPaginationOptions(jsonData, getTransactionsByP2Cursor, getTransactionsByP2Limit, getTransactionsByP2Order)
-		makeRequest("get_transactions_by_p2", jsonData)
+		makeTransactionRequest("get_transactions_by_p2", jsonData, getTransactionsByP2Pretty)
 	},
 }

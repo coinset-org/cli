@@ -6,12 +6,14 @@ var (
 	getPendingTransactionsByP2Cursor string
 	getPendingTransactionsByP2Limit  int
 	getPendingTransactionsByP2Order  string
+	getPendingTransactionsByP2Pretty bool
 )
 
 func init() {
 	getPendingTransactionsByP2Cmd.Flags().StringVar(&getPendingTransactionsByP2Cursor, "cursor", "", "Pagination cursor from a previous response")
 	getPendingTransactionsByP2Cmd.Flags().IntVar(&getPendingTransactionsByP2Limit, "limit", 0, "Maximum number of records to return")
 	getPendingTransactionsByP2Cmd.Flags().StringVar(&getPendingTransactionsByP2Order, "order", "", `Result order: "asc" or "desc"`)
+	getPendingTransactionsByP2Cmd.Flags().BoolVarP(&getPendingTransactionsByP2Pretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getPendingTransactionsByP2Cmd)
 }
 
@@ -33,6 +35,6 @@ var getPendingTransactionsByP2Cmd = &cobra.Command{
 			"p2": p2,
 		}
 		_ = applyPaginationOptions(jsonData, getPendingTransactionsByP2Cursor, getPendingTransactionsByP2Limit, getPendingTransactionsByP2Order)
-		makeRequest("get_pending_transactions_by_p2", jsonData)
+		makeTransactionRequest("get_pending_transactions_by_p2", jsonData, getPendingTransactionsByP2Pretty)
 	},
 }

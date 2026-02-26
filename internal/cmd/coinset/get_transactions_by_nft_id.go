@@ -10,12 +10,14 @@ var (
 	getTransactionsByNftIDCursor string
 	getTransactionsByNftIDLimit  int
 	getTransactionsByNftIDOrder  string
+	getTransactionsByNftIDPretty bool
 )
 
 func init() {
 	getTransactionsByNftIDCmd.Flags().StringVar(&getTransactionsByNftIDCursor, "cursor", "", "Pagination cursor from a previous response")
 	getTransactionsByNftIDCmd.Flags().IntVar(&getTransactionsByNftIDLimit, "limit", 0, "Maximum number of records to return")
 	getTransactionsByNftIDCmd.Flags().StringVar(&getTransactionsByNftIDOrder, "order", "", `Result order: "asc" or "desc"`)
+	getTransactionsByNftIDCmd.Flags().BoolVarP(&getTransactionsByNftIDPretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getTransactionsByNftIDCmd)
 }
 
@@ -36,6 +38,6 @@ var getTransactionsByNftIDCmd = &cobra.Command{
 			"nft_id": normalizeMaybeHex(args[0]),
 		}
 		_ = applyPaginationOptions(jsonData, getTransactionsByNftIDCursor, getTransactionsByNftIDLimit, getTransactionsByNftIDOrder)
-		makeRequest("get_transactions_by_nft_id", jsonData)
+		makeTransactionRequest("get_transactions_by_nft_id", jsonData, getTransactionsByNftIDPretty)
 	},
 }

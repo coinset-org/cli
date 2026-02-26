@@ -6,12 +6,14 @@ var (
 	getTransactionsByCatAssetIDCursor string
 	getTransactionsByCatAssetIDLimit  int
 	getTransactionsByCatAssetIDOrder  string
+	getTransactionsByCatAssetIDPretty bool
 )
 
 func init() {
 	getTransactionsByCatAssetIDCmd.Flags().StringVar(&getTransactionsByCatAssetIDCursor, "cursor", "", "Pagination cursor from a previous response")
 	getTransactionsByCatAssetIDCmd.Flags().IntVar(&getTransactionsByCatAssetIDLimit, "limit", 0, "Maximum number of records to return")
 	getTransactionsByCatAssetIDCmd.Flags().StringVar(&getTransactionsByCatAssetIDOrder, "order", "", `Result order: "asc" or "desc"`)
+	getTransactionsByCatAssetIDCmd.Flags().BoolVarP(&getTransactionsByCatAssetIDPretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getTransactionsByCatAssetIDCmd)
 }
 
@@ -33,6 +35,6 @@ var getTransactionsByCatAssetIDCmd = &cobra.Command{
 			"asset_id": assetID,
 		}
 		_ = applyPaginationOptions(jsonData, getTransactionsByCatAssetIDCursor, getTransactionsByCatAssetIDLimit, getTransactionsByCatAssetIDOrder)
-		makeRequest("get_transactions_by_cat_asset_id", jsonData)
+		makeTransactionRequest("get_transactions_by_cat_asset_id", jsonData, getTransactionsByCatAssetIDPretty)
 	},
 }

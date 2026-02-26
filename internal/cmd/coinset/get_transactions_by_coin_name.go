@@ -2,10 +2,14 @@ package cmd
 
 import "github.com/spf13/cobra"
 
-var getTransactionsByCoinNameIncludeTransactions bool
+var (
+	getTransactionsByCoinNameIncludeTransactions bool
+	getTransactionsByCoinNamePretty              bool
+)
 
 func init() {
 	getTransactionsByCoinNameCmd.Flags().BoolVar(&getTransactionsByCoinNameIncludeTransactions, "include-transactions", false, "Include created/spent transaction payloads when available")
+	getTransactionsByCoinNameCmd.Flags().BoolVarP(&getTransactionsByCoinNamePretty, "pretty", "p", false, "display formatted transaction output")
 	rootCmd.AddCommand(getTransactionsByCoinNameCmd)
 }
 
@@ -27,6 +31,6 @@ var getTransactionsByCoinNameCmd = &cobra.Command{
 		if getTransactionsByCoinNameIncludeTransactions {
 			jsonData["include_transactions"] = true
 		}
-		makeRequest("get_transactions_by_coin_name", jsonData)
+		makeTransactionRequest("get_transactions_by_coin_name", jsonData, getTransactionsByCoinNamePretty)
 	},
 }
