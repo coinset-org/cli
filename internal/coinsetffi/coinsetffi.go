@@ -10,6 +10,7 @@ package coinsetffi
 #cgo linux,amd64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/x86_64-unknown-linux-gnu
 #cgo windows,amd64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/x86_64-pc-windows-gnu
 #cgo LDFLAGS: -lcoinset
+#cgo linux LDFLAGS: -lm
 
 char* coinset_inspect(const uint8_t* input_ptr, size_t input_len, uint32_t flags);
 char* coinset_clvm_decompile(const uint8_t* input_ptr, size_t input_len, uint32_t flags);
