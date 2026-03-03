@@ -19,9 +19,20 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+      - name: Build coinset-inspect staticlib
+        run: |
+          cargo build --release -p coinset-ffi --target x86_64-unknown-linux-gnu
+          mkdir -p cgo-lib/x86_64-unknown-linux-gnu
+          cp "target/x86_64-unknown-linux-gnu/release/libcoinset.a" cgo-lib/x86_64-unknown-linux-gnu/
       - name: Run GoReleaser (Build)
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: ~> v1
-          args: build --clean --skip=validate
+          args: build --clean --skip=validate -f .goreleaser.linux.yaml
+        env:
+          CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu

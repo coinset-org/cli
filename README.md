@@ -78,6 +78,34 @@ $ coinset get_coin_records_by_parent_ids 0xa908ee64a5821b7bda5d798c053a79c8b3d7c
 }
 ```
 
+### Spend inspection (`--inspect`)
+If an RPC response contains spend data (spend bundles / coin spends), you can add `--inspect` to replace the output with a best-effort interpreted view: cost, conditions, additions/removals, signatures, and optional CLVM disassembly.
+
+Example:
+
+```bash
+coinset get_block_spends 5000000 --inspect
+```
+
+`--inspect` is supported when the returned JSON contains one of these shapes:
+- `mempool_item`
+- `spend_bundle` / `spend_bundle_bytes`
+- `coin_spends` / `block_spends`
+- `coin_spend` (single spend)
+
+Notes:
+- Release/brew installs include `--inspect`.
+- Building from source requires the Rust static library. The easiest path is `make build` (see `Makefile`).
+
+### CLVM tools (`coinset clvm`)
+Local CLVM helpers are available under `coinset clvm`:
+
+```bash
+coinset clvm decompile 0xff0101
+coinset clvm compile "(q . 1)"
+coinset clvm run "(q . 1)" "()" --cost
+```
+
 ## Available Commands
 
 The following table shows all available CLI commands organized by functionality:

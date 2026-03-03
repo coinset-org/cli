@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"math/big"
@@ -15,6 +16,7 @@ import (
 	"github.com/chia-network/go-chia-libs/pkg/bech32m"
 	"github.com/chia-network/go-chia-libs/pkg/rpc"
 	"github.com/chia-network/go-chia-libs/pkg/rpcinterface"
+	"github.com/coinset-org/cli/internal/coinsetffi"
 	"github.com/dustin/go-humanize"
 	"github.com/itchyny/gojq"
 )
@@ -145,7 +147,88 @@ func makeRequest(path string, jsonData map[string]interface{}) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+	if inspect {
+		inspected, err := inspectRpcOutput(jsonResponse)
+		if err != nil {
+			log.Fatal(err.Error())
+		}
+		printJson(inspected)
+		return
+	}
 	printJson(jsonResponse)
+}
+
+func inspectRpcOutput(jsonBytes []byte) ([]byte, error) {
+	var v interface{}
+	if err := json.Unmarshal(jsonBytes, &v); err != nil {
+		return nil, fmt.Errorf("invalid JSON from RPC: %w", err)
+	}
+
+	// Many full node RPCs return mempool items as a map keyed by tx id.
+	if m, ok := v.(map[string]interface{}); ok {
+		if items, ok := m["mempool_items"]; ok {
+			if itemsMap, ok := items.(map[string]interface{}); ok {
+				out := make(map[string]json.RawMessage, len(itemsMap))
+				for txID, item := range itemsMap {
+					wrapped := map[string]interface{}{"mempool_item": item}
+					wrappedBytes, err := json.Marshal(wrapped)
+					if err != nil {
+						return nil, fmt.Errorf("failed to re-marshal mempool_item %s: %w", txID, err)
+					}
+					inspected, err := coinsetffi.Inspect(wrappedBytes, false, false)
+					if err != nil {
+						return nil, fmt.Errorf("inspect mempool_item %s: %w", txID, err)
+					}
+					out[txID] = json.RawMessage(inspected)
+				}
+				return json.Marshal(out)
+			}
+		}
+	}
+
+	if !looksInspectable(v) {
+		return nil, errors.New("--inspect not supported for this endpoint/output shape")
+	}
+	return coinsetffi.Inspect(jsonBytes, false, false)
+}
+
+func looksInspectable(v interface{}) bool {
+	switch x := v.(type) {
+	case []interface{}:
+		// Often block spends are arrays of coin spend entries.
+		return len(x) > 0
+	case map[string]interface{}:
+		if _, ok := x["mempool_item"]; ok {
+			return true
+		}
+		if _, ok := x["mempool_items"]; ok {
+			return true
+		}
+		if _, ok := x["spend_bundle"]; ok {
+			return true
+		}
+		if _, ok := x["spend_bundle_bytes"]; ok {
+			return true
+		}
+		if _, ok := x["coin_spends"]; ok {
+			return true
+		}
+		if _, ok := x["block_spends"]; ok {
+			return true
+		}
+		if _, ok := x["coin_spend"]; ok {
+			return true
+		}
+		if _, ok := x["puzzle_reveal"]; ok {
+			return true
+		}
+		if _, ok := x["solution"]; ok {
+			return true
+		}
+		return false
+	default:
+		return false
+	}
 }
 
 // Cache for block records (height -> timestamp)
