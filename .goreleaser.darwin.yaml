@@ -1,0 +1,63 @@
+version: 1
+
+project_name: coinset
+
+before:
+  hooks:
+    - go mod tidy
+    - go generate ./...
+
+builds:
+  - id: coinset-darwin
+    main: ./cmd/coinset
+    env:
+      - CGO_ENABLED=1
+      - MACOSX_DEPLOYMENT_TARGET=12.0
+      - CGO_CFLAGS=-mmacosx-version-min=12.0
+      - CGO_LDFLAGS=-mmacosx-version-min=12.0
+    goos:
+      - darwin
+    goarch:
+      - arm64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+
+archives:
+  - format: tar.gz
+    name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: coinset-org
+    name: cli
+
+brews:
+  - commit_author:
+      name: Cameron Cooper
+      email: cameron@coinset.org
+    homepage: "https://www.coinset.org/"
+    description: "CLI for accessing the Chia blockchain."
+    license: "MIT"
+    repository:
+      owner: coinset-org
+      name: homebrew-cli
+    install: |
+      bin.install "coinset" => "coinset"
+      output = Utils.popen_read("SHELL=bash #{bin}/coinset completion bash")
+      (bash_completion/"coinset").write output
+      output = Utils.popen_read("SHELL=zsh #{bin}/coinset completion zsh")
+      (zsh_completion/"_coinset").write output
+      prefix.install_metafiles

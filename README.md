@@ -78,6 +78,64 @@ $ coinset get_coin_records_by_parent_ids 0xa908ee64a5821b7bda5d798c053a79c8b3d7c
 }
 ```
 
+### Spend inspection (`--inspect`)
+If an RPC response contains spend data (spend bundles / coin spends), you can add `--inspect` to replace the output with a best-effort interpreted view: cost, conditions, additions/removals, signatures, and optional CLVM disassembly.
+
+Example:
+
+```bash
+coinset get_block_spends 5000000 --inspect
+```
+
+`--inspect` is supported when the returned JSON contains one of these shapes:
+- `mempool_item`
+- `spend_bundle` / `spend_bundle_bytes`
+- `coin_spends` / `block_spends`
+- `coin_spend` (single spend)
+
+Notes:
+- Release/brew installs include `--inspect`.
+- Building from source requires the Rust static library. The easiest path is `make build` (see `Makefile`).
+
+### CLVM tools (`coinset clvm`)
+Local CLVM helpers are available under `coinset clvm`:
+
+- Inputs accept **either** hex bytes (e.g. `0xff0101`) **or** a readable s-expression (e.g. `"(q . 1)"`).
+- Outputs are JSON so you can pipe through `--raw -q` / `jq`.
+
+```bash
+coinset clvm decompile 0xff0101
+coinset clvm compile "(q . 1)"
+coinset clvm run "(q . 1)" "()" --cost
+coinset clvm tree_hash "(q . 1)"
+coinset clvm curry "(q . 1)" 42 75
+coinset clvm uncurry 0xff02ffff01ff0101ffff04ffff0142ffff04ffff0175ff01808080
+```
+
+#### `coinset clvm tree_hash`
+Compute a program's tree hash.
+
+```bash
+coinset clvm tree_hash "(q . 1)"
+coinset clvm tree_hash 0xff0101
+```
+
+#### `coinset clvm curry`
+Curry arguments into a module. Arguments are provided as **individual CLI parameters**.
+
+```bash
+coinset clvm curry "(q . 1)" 42 75
+coinset clvm curry 0xff0101 0x2a 0x4b
+```
+
+#### `coinset clvm uncurry`
+Attempt to parse a curried program and return the original module + arguments.
+
+```bash
+coinset clvm uncurry 0xff02ffff01ff0101ffff04ffff0142ffff04ffff0175ff01808080
+coinset clvm uncurry "(a (q . 1) (c (q . 42) (c (q . 75) 1)))"
+```
+
 ## Available Commands
 
 The following table shows all available CLI commands organized by functionality:
