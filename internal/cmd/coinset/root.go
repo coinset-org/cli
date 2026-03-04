@@ -34,6 +34,7 @@ var local bool
 var raw bool
 var api string
 var describe bool
+var inspect bool
 var version = "dev"
 
 func init() {
@@ -44,5 +45,6 @@ func init() {
 	rootCmd.PersistentFlags().StringVarP(&api, "api", "a", "", "api host to use")
 	rootCmd.PersistentFlags().BoolVarP(&raw, "raw", "r", false, "display output in raw json")
 	rootCmd.PersistentFlags().BoolVarP(&describe, "describe", "d", false, "add human-readable descriptions to output fields")
+	rootCmd.PersistentFlags().BoolVar(&inspect, "inspect", false, "replace output with inspected spend interpretation when possible")
 	rootCmd.MarkFlagsMutuallyExclusive("mainnet", "testnet", "api")
 }

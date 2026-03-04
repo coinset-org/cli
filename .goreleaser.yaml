@@ -1,10 +1,10 @@
-# This is an example .goreleaser.yml file with some sensible defaults.
-# Make sure to check the documentation at https://goreleaser.com
-
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
 # yaml-language-server: $schema=https://goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
+# NOTE: CGO + Rust staticlib builds are runner-specific.
+# In CI we run GoReleaser with one of:
+# - `.goreleaser.linux.yaml`
+# - `.goreleaser.darwin.yaml`
+# - `.goreleaser.windows.yaml`
+# This default config is kept runnable locally and targets Linux only.
 
 version: 1
 
@@ -16,13 +16,16 @@ before:
     - go generate ./...
 
 builds:
-  - main: ./cmd/coinset
+  - id: coinset-linux
+    main: ./cmd/coinset
     env:
-      - CGO_ENABLED=0
+      - CGO_ENABLED=1
     goos:
       - linux
-      - windows
-      - darwin
+    goarch:
+      - amd64
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
 
 archives:
   - format: tar.gz
@@ -34,10 +37,6 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
-    # use zip for windows archives
-    format_overrides:
-      - goos: windows
-        format: zip
 
 changelog:
   sort: asc
@@ -50,22 +49,4 @@ release:
   github:
     owner: coinset-org
     name: cli
-
-brews:
-  - commit_author:
-      name: Cameron Cooper
-      email: cameron@coinset.org
-    homepage: "https://www.coinset.org/"
-    description: "CLI for accessing the Chia blockchain."
-    license: "MIT"
-    repository:
-      owner: coinset-org
-      name: homebrew-cli
-    install: |
-      bin.install "coinset" => "coinset"
-      output = Utils.popen_read("SHELL=bash #{bin}/coinset completion bash")
-      (bash_completion/"coinset").write output
-      output = Utils.popen_read("SHELL=zsh #{bin}/coinset completion zsh")
-      (zsh_completion/"_coinset").write output
-      prefix.install_metafiles
 

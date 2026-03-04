@@ -8,6 +8,8 @@ on:
 jobs:
   tag:
     runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.increment_version.outputs.new_version }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -51,38 +53,143 @@ jobs:
         
         echo "New version: $new_version"
         
-        # Save the new version to the GitHub environment to be used in future steps
-        echo "new_version=$new_version" >> $GITHUB_ENV
+        echo "new_version=$new_version" >> "$GITHUB_OUTPUT"
 
     - name: Create and push new tag
       env:
         GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
       run: |
-        new_version=${{ env.new_version }}
+        new_version=${{ steps.increment_version.outputs.new_version }}
 
         # Create a new tag
         git tag "$new_version"
         
         # Push the new tag to the remote repository
         git push origin "$new_version"
-  release:
+
+  release_linux:
     needs: tag
     runs-on: ubuntu-latest
     environment: goreleaser
     steps:
-      - name: Checkout
+      - name: Checkout tag
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version: stable
-      - name: Run GoReleaser
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu
+
+      - name: Build coinset-inspect staticlib
+        run: |
+          cargo build --release -p coinset-ffi --target x86_64-unknown-linux-gnu
+          mkdir -p cgo-lib/x86_64-unknown-linux-gnu
+          cp "target/x86_64-unknown-linux-gnu/release/libcoinset.a" cgo-lib/x86_64-unknown-linux-gnu/
+
+      - name: Run GoReleaser (linux)
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: ~> v1
-          args: release --clean
+          args: release --clean -f .goreleaser.linux.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu
+
+  release_macos:
+    needs: [tag, release_linux]
+    runs-on: macos-latest
+    environment: goreleaser
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+
+      - name: Build coinset-inspect staticlib
+        run: |
+          MACOSX_DEPLOYMENT_TARGET=12.0 cargo build --release -p coinset-ffi --target aarch64-apple-darwin
+          mkdir -p cgo-lib/aarch64-apple-darwin
+          cp "target/aarch64-apple-darwin/release/libcoinset.a" cgo-lib/aarch64-apple-darwin/
+
+      - name: Run GoReleaser (darwin)
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ~> v1
+          args: release --clean -f .goreleaser.darwin.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          CGO_CFLAGS: -mmacosx-version-min=12.0
+          CGO_LDFLAGS: -mmacosx-version-min=12.0 -L${{ github.workspace }}/cgo-lib/aarch64-apple-darwin
+          MACOSX_DEPLOYMENT_TARGET: "12.0"
+
+  release_windows:
+    needs: [tag, release_macos]
+    runs-on: windows-latest
+    environment: goreleaser
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Setup MSYS2 (mingw64)
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+      - name: Add MinGW to PATH
+        shell: pwsh
+        run: |
+          "C:\\msys64\\mingw64\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+
+      - name: Build coinset-inspect staticlib
+        shell: msys2 {0}
+        run: |
+          cargo build --release -p coinset-ffi --target x86_64-pc-windows-gnu
+          mkdir -p cgo-lib/x86_64-pc-windows-gnu
+          cp "target/x86_64-pc-windows-gnu/release/libcoinset.a" cgo-lib/x86_64-pc-windows-gnu/
+
+      - name: Run GoReleaser (windows)
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ~> v1
+          args: release --clean -f .goreleaser.windows.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-pc-windows-gnu
+          CC: gcc
