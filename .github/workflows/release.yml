@@ -4,6 +4,11 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - ".goreleaser.yaml"
+      - ".goreleaser.*.yaml"
+      - ".github/workflows/repair-release.yml"
+      - ".github/workflows/release.yml"
 
 jobs:
   tag:

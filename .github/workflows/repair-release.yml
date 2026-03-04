@@ -1,0 +1,128 @@
+name: Repair Release Assets
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to repair (e.g. v1.0.21)"
+        required: true
+        type: string
+      upload_windows:
+        description: "Build + upload Windows asset"
+        required: true
+        default: true
+        type: boolean
+      recompute_checksums:
+        description: "Recompute and clobber checksums asset"
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  upload_windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout tag
+        if: ${{ inputs.upload_windows }}
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag }}
+
+      - name: Set up Go
+        if: ${{ inputs.upload_windows }}
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Setup MSYS2 (mingw64)
+        if: ${{ inputs.upload_windows }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          update: true
+          install: >-
+            mingw-w64-x86_64-gcc
+
+      - name: Add MinGW to PATH
+        if: ${{ inputs.upload_windows }}
+        shell: pwsh
+        run: |
+          "C:\msys64\mingw64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Setup Rust
+        if: ${{ inputs.upload_windows }}
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-gnu
+
+      - name: Build libcoinset staticlib
+        if: ${{ inputs.upload_windows }}
+        shell: msys2 {0}
+        run: |
+          cargo build --release -p coinset-ffi --target x86_64-pc-windows-gnu
+          mkdir -p cgo-lib/x86_64-pc-windows-gnu
+          cp "target/x86_64-pc-windows-gnu/release/libcoinset.a" cgo-lib/x86_64-pc-windows-gnu/
+
+      - name: Build artifacts (windows)
+        if: ${{ inputs.upload_windows }}
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ~> v1
+          args: build --clean --skip=validate -f .goreleaser.windows.yaml
+        env:
+          CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-pc-windows-gnu
+          CC: gcc
+
+      - name: Upload windows archives to existing release
+        if: ${{ inputs.upload_windows }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          ls -la dist || true
+          # GoReleaser may place archives in dist/ subdirectories.
+          zips="$(ls -1 dist/*.zip dist/*/*.zip dist/*/*/*.zip 2>/dev/null || true)"
+          if [ -z "$zips" ]; then
+            echo "no zip archives found under dist/"
+            exit 1
+          fi
+          echo "$zips"
+          gh release upload "$TAG" $zips --clobber
+
+  recompute_checksums:
+    if: ${{ inputs.recompute_checksums }}
+    needs: [upload_windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          cd assets
+          gh release download "$TAG"
+          ls -la
+
+      - name: Recompute and upload checksums (clobber)
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          ver="${TAG#v}"
+          cd assets
+          # Only checksum the packaged archives, not the checksum file itself.
+          rm -f "coinset_${ver}_checksums.txt"
+          sha256sum *.tar.gz *.zip > "coinset_${ver}_checksums.txt"
+          cat "coinset_${ver}_checksums.txt"
+          gh release upload "$TAG" "coinset_${ver}_checksums.txt" --clobber
+
