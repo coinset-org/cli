@@ -10,7 +10,12 @@ crate-type = ["staticlib"]
 
 [dependencies]
 anyhow.workspace = true
+serde.workspace = true
 serde_json.workspace = true
 
 coinset-inspect-core = { path = "../coinset-inspect-core" }
 coinset-clvm-core = { path = "../coinset-clvm-core" }
+
+[dev-dependencies]
+chia-protocol.workspace = true
+clvm-utils.workspace = true

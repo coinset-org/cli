@@ -12,3 +12,5 @@ serde_json.workspace = true
 
 clvmr.workspace = true
 chialisp.workspace = true
+clvm-utils.workspace = true
+clvm-traits.workspace = true

@@ -19,3 +19,15 @@ func ClvmCompile(_ string, _ bool) ([]byte, error) {
 func ClvmRun(_ string, _ string, _ uint64, _ bool, _ bool) ([]byte, error) {
 	return nil, errors.New("coinset ffi requires cgo-enabled build")
 }
+
+func ClvmTreeHash(_ string, _ bool) ([]byte, error) {
+	return nil, errors.New("coinset ffi requires cgo-enabled build")
+}
+
+func ClvmUncurry(_ string, _ bool) ([]byte, error) {
+	return nil, errors.New("coinset ffi requires cgo-enabled build")
+}
+
+func ClvmCurry(_ string, _ []string, _ bool) ([]byte, error) {
+	return nil, errors.New("coinset ffi requires cgo-enabled build")
+}

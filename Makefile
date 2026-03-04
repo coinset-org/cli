@@ -38,22 +38,22 @@ LIB := $(LIBDIR)/libcoinset.a
 
 all: build
 
-$(LIB):
+rustlib:
 	mkdir -p "$(LIBDIR)"
 	cargo build --release -p coinset-ffi --target "$(RUST_TARGET)"
 	cp "target/$(RUST_TARGET)/release/libcoinset.a" "$(LIBDIR)/"
 
-rustlib: $(LIB)
-
 build: rustlib
-	CGO_ENABLED=1 go build -o bin/coinset ./cmd/coinset
+	# Go's build cache does not account for changes in linked static libraries.
+	# Force a rebuild so updates to libcoinset.a are reflected in the binary.
+	CGO_ENABLED=1 go build -a -o bin/coinset ./cmd/coinset
 
 run: rustlib
 	CGO_ENABLED=1 go run ./cmd/coinset
 
 test: rustlib
 	cargo test -p coinset-inspect-core
-	CGO_ENABLED=1 go test ./...
+	CGO_ENABLED=1 go test -count=1 ./...
 
 clean:
 	rm -rf bin cgo-lib

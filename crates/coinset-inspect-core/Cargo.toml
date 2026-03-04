@@ -17,3 +17,6 @@ chia-traits.workspace = true
 clvm-utils.workspace = true
 clvmr.workspace = true
 chialisp.workspace = true
+chia-puzzle-types.workspace = true
+chia-sdk-driver.workspace = true
+chia-sdk-types.workspace = true

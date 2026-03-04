@@ -100,10 +100,40 @@ Notes:
 ### CLVM tools (`coinset clvm`)
 Local CLVM helpers are available under `coinset clvm`:
 
+- Inputs accept **either** hex bytes (e.g. `0xff0101`) **or** a readable s-expression (e.g. `"(q . 1)"`).
+- Outputs are JSON so you can pipe through `--raw -q` / `jq`.
+
 ```bash
 coinset clvm decompile 0xff0101
 coinset clvm compile "(q . 1)"
 coinset clvm run "(q . 1)" "()" --cost
+coinset clvm tree_hash "(q . 1)"
+coinset clvm curry "(q . 1)" 42 75
+coinset clvm uncurry 0xff02ffff01ff0101ffff04ffff0142ffff04ffff0175ff01808080
+```
+
+#### `coinset clvm tree_hash`
+Compute a program's tree hash.
+
+```bash
+coinset clvm tree_hash "(q . 1)"
+coinset clvm tree_hash 0xff0101
+```
+
+#### `coinset clvm curry`
+Curry arguments into a module. Arguments are provided as **individual CLI parameters**.
+
+```bash
+coinset clvm curry "(q . 1)" 42 75
+coinset clvm curry 0xff0101 0x2a 0x4b
+```
+
+#### `coinset clvm uncurry`
+Attempt to parse a curried program and return the original module + arguments.
+
+```bash
+coinset clvm uncurry 0xff02ffff01ff0101ffff04ffff0142ffff04ffff0175ff01808080
+coinset clvm uncurry "(a (q . 1) (c (q . 42) (c (q . 75) 1)))"
 ```
 
 ## Available Commands

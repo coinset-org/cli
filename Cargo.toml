@@ -24,3 +24,9 @@ chia-traits = "0.36.1"
 clvm-utils = "0.36.1"
 clvmr = "=0.16.2"
 chialisp = "0.4.1"
+clvm-traits = { version = "0.36.1", features = ["derive", "chia-bls", "chia-secp"] }
+
+# Wallet SDK (layer puzzle recognition)
+chia-sdk-driver = { git = "https://github.com/xch-dev/chia-wallet-sdk", tag = "0.33.0" }
+chia-sdk-types = { git = "https://github.com/xch-dev/chia-wallet-sdk", tag = "0.33.0" }
+chia-puzzle-types = "0.36.1"

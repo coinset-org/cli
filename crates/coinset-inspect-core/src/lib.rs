@@ -17,6 +17,8 @@ use clvmr::LIMIT_HEAP;
 use serde::Serialize;
 use serde_json::{Map, Value, json};
 
+mod recognize;
+
 const DEFAULT_MAX_COST: u64 = 11_000_000_000;
 const DEFAULT_PREV_TX_HEIGHT: u32 = 10_000_000;
 
@@ -86,6 +88,7 @@ pub struct SpendAnalysis {
     pub coin_spend: CoinSpendView,
     pub evaluation: EvaluationInfo,
     pub clvm: Option<ClvmInfo>,
+    pub puzzle_recognition: Option<recognize::PuzzleRecognition>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -295,6 +298,14 @@ fn build_error_output(
         } else {
             None
         };
+        let puzzle_recognition = if explain_level == ExplainLevel::Deep {
+            Some(recognize::recognize_puzzle_and_solution(
+                spend.puzzle_reveal.as_ref(),
+                spend.solution.as_ref(),
+            ))
+        } else {
+            None
+        };
         spends.push(SpendAnalysis {
             coin_spend: CoinSpendView {
                 coin: coin_ref_from_coin(&spend.coin),
@@ -312,6 +323,7 @@ fn build_error_output(
                 }),
             },
             clvm,
+            puzzle_recognition,
         });
     }
 
@@ -471,6 +483,14 @@ fn analyze_single_spend(
         } else {
             None
         },
+        puzzle_recognition: if explain_level == ExplainLevel::Deep {
+            Some(recognize::recognize_puzzle_and_solution(
+                spend.puzzle_reveal.as_ref(),
+                spend.solution.as_ref(),
+            ))
+        } else {
+            None
+        },
     }
 }
 
@@ -555,7 +575,7 @@ fn coin_ref_from_coin(coin: &Coin) -> CoinRef {
     }
 }
 
-fn encode_hex_prefixed(bytes: &[u8]) -> String {
+pub(crate) fn encode_hex_prefixed(bytes: &[u8]) -> String {
     format!("0x{}", hex::encode(bytes))
 }
 
@@ -746,5 +766,20 @@ mod tests {
             load_input(&serde_json::to_string(&blob).expect("json")).expect("parse");
         assert_eq!(kind.as_str(), "block");
         assert_eq!(parsed.coin_spends.len(), 1);
+    }
+
+    #[test]
+    fn inspect_output_includes_puzzle_recognition_field() {
+        let bundle = sample_spend_bundle();
+        let blob = json!({ "spend_bundle": bundle });
+        let out = inspect_json_string(
+            &serde_json::to_string(&blob).expect("json"),
+            false,
+            ExplainLevel::Deep,
+        )
+        .expect("inspect");
+        let v: serde_json::Value = serde_json::from_str(&out).expect("json parse");
+        let spend0 = &v["result"]["spends"][0];
+        assert!(spend0.get("puzzle_recognition").is_some(), "missing puzzle_recognition key");
     }
 }
