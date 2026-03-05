@@ -74,7 +74,7 @@ jobs:
 
   release_linux:
     needs: tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     environment: goreleaser
     steps:
       - name: Checkout tag
