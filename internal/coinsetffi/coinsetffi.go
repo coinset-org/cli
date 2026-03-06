@@ -8,6 +8,7 @@ package coinsetffi
 
 #cgo darwin,arm64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/aarch64-apple-darwin
 #cgo linux,amd64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/x86_64-unknown-linux-gnu
+#cgo linux,arm64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/aarch64-unknown-linux-gnu
 #cgo windows,amd64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/x86_64-pc-windows-gnu
 #cgo LDFLAGS: -lcoinset
 #cgo linux LDFLAGS: -lm

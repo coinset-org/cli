@@ -110,7 +110,7 @@ jobs:
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu
 
   release_macos:
-    needs: [tag, release_linux]
+    needs: [tag, release_linux_arm64]
     runs-on: macos-latest
     environment: goreleaser
     steps:
@@ -198,3 +198,46 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-pc-windows-gnu
           CC: gcc
+
+  release_linux_arm64:
+    needs: [tag, release_linux]
+    runs-on: ubuntu-20.04
+    environment: goreleaser
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install Linux arm64 cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+
+      - name: Build coinset-inspect staticlib (arm64)
+        run: |
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+            cargo build --release -p coinset-ffi --target aarch64-unknown-linux-gnu
+          mkdir -p cgo-lib/aarch64-unknown-linux-gnu
+          cp "target/aarch64-unknown-linux-gnu/release/libcoinset.a" cgo-lib/aarch64-unknown-linux-gnu/
+
+      - name: Run GoReleaser (linux arm64)
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ~> v1
+          args: release --clean -f .goreleaser.linux.arm64.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          CC: aarch64-linux-gnu-gcc
