@@ -31,6 +31,8 @@ archives:
       {{- else if eq .Arch "386" }}i386
       {{- else }}{{ .Arch }}{{ end }}
       {{- if .Arm }}v{{ .Arm }}{{ end }}
+    files:
+      - SKILL.md
 
 checksum:
   name_template: >-
@@ -47,21 +49,3 @@ release:
   github:
     owner: coinset-org
     name: cli
-
-brews:
-  - commit_author:
-      name: Cameron Cooper
-      email: cameron@coinset.org
-    homepage: "https://www.coinset.org/"
-    description: "CLI for accessing the Chia blockchain."
-    license: "MIT"
-    repository:
-      owner: coinset-org
-      name: homebrew-cli
-    install: |
-      bin.install "coinset" => "coinset"
-      output = Utils.popen_read("SHELL=bash #{bin}/coinset completion bash")
-      (bash_completion/"coinset").write output
-      output = Utils.popen_read("SHELL=zsh #{bin}/coinset completion zsh")
-      (zsh_completion/"_coinset").write output
-      prefix.install_metafiles

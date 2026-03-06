@@ -74,7 +74,7 @@ jobs:
 
   release_linux:
     needs: tag
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     environment: goreleaser
     steps:
       - name: Checkout tag
@@ -110,7 +110,7 @@ jobs:
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu
 
   release_macos:
-    needs: [tag, release_linux]
+    needs: [tag, release_linux_arm64]
     runs-on: macos-latest
     environment: goreleaser
     steps:
@@ -198,3 +198,198 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-pc-windows-gnu
           CC: gcc
+
+  release_linux_arm64:
+    needs: [tag, release_linux]
+    runs-on: ubuntu-20.04
+    environment: goreleaser
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install Linux arm64 cross toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-unknown-linux-gnu
+
+      - name: Build coinset-inspect staticlib (arm64)
+        run: |
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc \
+            cargo build --release -p coinset-ffi --target aarch64-unknown-linux-gnu
+          mkdir -p cgo-lib/aarch64-unknown-linux-gnu
+          cp "target/aarch64-unknown-linux-gnu/release/libcoinset.a" cgo-lib/aarch64-unknown-linux-gnu/
+
+      - name: Run GoReleaser (linux arm64)
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ~> v1
+          args: release --clean -f .goreleaser.linux.arm64.yaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          CC: aarch64-linux-gnu-gcc
+
+  update_homebrew_tap:
+    name: Update Homebrew tap
+    needs: [tag, release_linux, release_linux_arm64, release_macos, release_windows]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download release archives
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          TAG: ${{ needs.tag.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          gh release download "$TAG" --repo coinset-org/cli -p "coinset_*.tar.gz" -D assets
+          ls -la assets
+
+      - name: Compute sha256
+        id: sha
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          mac=(assets/coinset_Darwin_arm64.tar.gz)
+          lin_amd=(assets/coinset_Linux_x86_64.tar.gz)
+          lin_arm=(assets/coinset_Linux_arm64.tar.gz)
+
+          if [ ${#mac[@]} -eq 0 ] || [ ${#lin_amd[@]} -eq 0 ]; then
+            echo "missing required assets (need Darwin_arm64 + Linux_x86_64)" >&2
+            exit 1
+          fi
+
+          mac_sha=$(sha256sum "${mac[0]}" | awk '{print $1}')
+          lin_amd_sha=$(sha256sum "${lin_amd[0]}" | awk '{print $1}')
+
+          echo "mac_sha=$mac_sha" >> "$GITHUB_OUTPUT"
+          echo "lin_amd_sha=$lin_amd_sha" >> "$GITHUB_OUTPUT"
+
+          if [ ${#lin_arm[@]} -ne 0 ]; then
+            lin_arm_sha=$(sha256sum "${lin_arm[0]}" | awk '{print $1}')
+            echo "lin_arm_sha=$lin_arm_sha" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout tap repo
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          gh repo clone coinset-org/homebrew-cli tap
+
+      - name: Update formula
+        shell: bash
+        env:
+          TAG: ${{ needs.tag.outputs.new_version }}
+          MAC_SHA: ${{ steps.sha.outputs.mac_sha }}
+          LINUX_AMD_SHA: ${{ steps.sha.outputs.lin_amd_sha }}
+          LINUX_ARM_SHA: ${{ steps.sha.outputs.lin_arm_sha }}
+        run: |
+          set -euo pipefail
+          ver="${TAG#v}"
+
+          cd tap
+          git fetch origin main
+          git checkout -B main origin/main
+          cd -
+
+          install_block_mac='      def install
+              bin.install "coinset" => "coinset"
+              output = Utils.popen_read("SHELL=bash #{bin}/coinset completion bash")
+              (bash_completion/"coinset").write output
+              output = Utils.popen_read("SHELL=zsh #{bin}/coinset completion zsh")
+              (zsh_completion/"_coinset").write output
+              prefix.install_metafiles
+            end'
+
+          install_block_linux='        def install
+                bin.install "coinset" => "coinset"
+                output = Utils.popen_read("SHELL=bash #{bin}/coinset completion bash")
+                (bash_completion/"coinset").write output
+                output = Utils.popen_read("SHELL=zsh #{bin}/coinset completion zsh")
+                (zsh_completion/"_coinset").write output
+                prefix.install_metafiles
+              end'
+
+          linux_arm_block=""
+          if [ -n "${LINUX_ARM_SHA:-}" ]; then
+            linux_arm_block=$(cat <<EOF
+    on_arm do
+      if Hardware::CPU.is_64_bit?
+        url "https://github.com/coinset-org/cli/releases/download/${TAG}/coinset_Linux_arm64.tar.gz"
+        sha256 "${LINUX_ARM_SHA}"
+
+${install_block_linux}
+      end
+    end
+EOF
+            )
+          fi
+
+          cat > tap/coinset.rb <<EOF
+# typed: false
+# frozen_string_literal: true
+#
+# This file was generated by GoReleaser. DO NOT EDIT.
+class Coinset < Formula
+  desc "CLI for accessing the Chia blockchain."
+  homepage "https://www.coinset.org/"
+  version "${ver}"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/coinset-org/cli/releases/download/${TAG}/coinset_Darwin_arm64.tar.gz"
+      sha256 "${MAC_SHA}"
+
+${install_block_mac}
+    end
+  end
+
+  on_linux do
+    on_intel do
+      if Hardware::CPU.is_64_bit?
+        url "https://github.com/coinset-org/cli/releases/download/${TAG}/coinset_Linux_x86_64.tar.gz"
+        sha256 "${LINUX_AMD_SHA}"
+
+${install_block_linux}
+      end
+    end
+${linux_arm_block}
+  end
+end
+EOF
+
+      - name: Commit and push formula update
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
+          TAG: ${{ needs.tag.outputs.new_version }}
+        run: |
+          set -euo pipefail
+          cd tap
+          if git diff --quiet; then
+            echo "No formula changes to commit."
+            exit 0
+          fi
+          ver="${TAG#v}"
+          git add coinset.rb
+          git -c user.name="coinset-bot" -c user.email="actions@users.noreply.github.com" \
+            commit -m "Brew formula update for coinset version v${ver}"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/coinset-org/homebrew-cli.git"
+          git push origin main

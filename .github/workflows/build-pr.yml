@@ -15,10 +15,15 @@ jobs:
       matrix:
         include:
           - name: linux-amd64
-            os: ubuntu-latest
+            os: ubuntu-20.04
             rust_target: x86_64-unknown-linux-gnu
             goreleaser_config: .goreleaser.linux.yaml
             cgo_lib_dir: cgo-lib/x86_64-unknown-linux-gnu
+          - name: linux-arm64
+            os: ubuntu-20.04
+            rust_target: aarch64-unknown-linux-gnu
+            goreleaser_config: .goreleaser.linux.arm64.yaml
+            cgo_lib_dir: cgo-lib/aarch64-unknown-linux-gnu
           - name: macos-arm64
             os: macos-latest
             rust_target: aarch64-apple-darwin
@@ -61,11 +66,21 @@ jobs:
         with:
           targets: ${{ matrix.rust_target }}
 
+      - name: Install Linux arm64 cross toolchain
+        if: runner.os == 'Linux' && matrix.name == 'linux-arm64'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-aarch64-linux-gnu
+
       - name: Build libcoinset staticlib
         shell: bash
         if: runner.os != 'Windows'
         run: |
           if [ "${{ runner.os }}" = "macOS" ]; then export MACOSX_DEPLOYMENT_TARGET=12.0; fi
+          if [ "${{ matrix.rust_target }}" = "aarch64-unknown-linux-gnu" ]; then
+            export CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER=aarch64-linux-gnu-gcc
+          fi
           cargo build --release -p coinset-ffi --target "${{ matrix.rust_target }}"
           mkdir -p "${{ matrix.cgo_lib_dir }}"
           cp "target/${{ matrix.rust_target }}/release/libcoinset.a" "${{ matrix.cgo_lib_dir }}/"
@@ -78,15 +93,21 @@ jobs:
           New-Item -ItemType Directory -Force -Path "${{ matrix.cgo_lib_dir }}" | Out-Null
           Copy-Item "target\\${{ matrix.rust_target }}\\release\\libcoinset.a" "${{ matrix.cgo_lib_dir }}\\"
 
-      - name: Run GoReleaser (Build linux)
-        if: runner.os == 'Linux'
+      - name: Run GoReleaser (Build linux amd64)
+        if: runner.os == 'Linux' && matrix.name == 'linux-amd64'
         uses: goreleaser/goreleaser-action@v5
         with:
           distribution: goreleaser
           version: ~> v1
           args: build --clean --skip=validate -f ${{ matrix.goreleaser_config }}
-        env:
-          CGO_LDFLAGS: -L${{ github.workspace }}/${{ matrix.cgo_lib_dir }}
+
+      - name: Run GoReleaser (Build linux arm64)
+        if: runner.os == 'Linux' && matrix.name == 'linux-arm64'
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          distribution: goreleaser
+          version: ~> v1
+          args: build --clean --skip=validate -f ${{ matrix.goreleaser_config }}
 
       - name: Run GoReleaser (Build macOS)
         if: runner.os == 'macOS'
