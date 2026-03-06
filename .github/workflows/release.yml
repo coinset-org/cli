@@ -94,19 +94,20 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.new_version }}
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: stable
-
       - name: Install build dependencies
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
             ca-certificates \
+            curl \
+            git \
             build-essential \
-            pkg-config \
-            git
+            pkg-config
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -232,6 +233,16 @@ jobs:
           fetch-depth: 0
           ref: ${{ needs.tag.outputs.new_version }}
 
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            curl \
+            git \
+            build-essential \
+            pkg-config
+
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
@@ -241,10 +252,6 @@ jobs:
         run: |
           apt-get update
           apt-get install -y --no-install-recommends \
-            ca-certificates \
-            build-essential \
-            pkg-config \
-            git \
             gcc-aarch64-linux-gnu
 
       - name: Setup Rust
