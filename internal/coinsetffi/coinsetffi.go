@@ -11,7 +11,7 @@ package coinsetffi
 #cgo linux,arm64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/aarch64-unknown-linux-gnu
 #cgo windows,amd64 LDFLAGS: -L${SRCDIR}/../../cgo-lib/x86_64-pc-windows-gnu
 #cgo LDFLAGS: -lcoinset
-#cgo linux LDFLAGS: -lm
+#cgo linux LDFLAGS: -lm -ldl
 #cgo windows LDFLAGS: -lbcrypt -lntdll -lws2_32 -luserenv
 
 char* coinset_inspect(const uint8_t* input_ptr, size_t input_len, uint32_t flags);
