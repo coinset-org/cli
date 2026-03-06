@@ -246,7 +246,9 @@ jobs:
             git \
             build-essential \
             pkg-config \
-            gcc-aarch64-linux-gnu
+            gcc-aarch64-linux-gnu \
+            libc6-dev-arm64-cross \
+            linux-libc-dev-arm64-cross
           git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout tag
@@ -259,12 +261,6 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
-
-      - name: Install Linux arm64 cross toolchain
-        run: |
-          apt-get update
-          apt-get install -y --no-install-recommends \
-            gcc-aarch64-linux-gnu
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
