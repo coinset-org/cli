@@ -127,6 +127,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           echo "pwd=$(pwd)"
           ls -la
           ls -la .git || true
@@ -285,6 +286,7 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
+          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           echo "pwd=$(pwd)"
           ls -la
           ls -la .git || true
