@@ -127,7 +127,6 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           echo "pwd=$(pwd)"
           ls -la
           ls -la .git || true
@@ -141,6 +140,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: "safe.directory"
+          GIT_CONFIG_VALUE_0: ${{ github.workspace }}
 
   release_macos:
     needs: [tag, release_linux_arm64]
@@ -286,7 +288,6 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
-          git config --global --add safe.directory "${GITHUB_WORKSPACE}"
           echo "pwd=$(pwd)"
           ls -la
           ls -la .git || true
@@ -300,6 +301,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CC: aarch64-linux-gnu-gcc
+          GIT_CONFIG_COUNT: "1"
+          GIT_CONFIG_KEY_0: "safe.directory"
+          GIT_CONFIG_VALUE_0: ${{ github.workspace }}
 
   update_homebrew_tap:
     name: Update Homebrew tap
