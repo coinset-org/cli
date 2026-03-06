@@ -100,6 +100,7 @@ jobs:
             git \
             build-essential \
             pkg-config
+          git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout tag
         uses: actions/checkout@v4
@@ -127,11 +128,6 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
-          echo "pwd=$(pwd)"
-          ls -la
-          ls -la .git || true
-          git rev-parse --is-inside-work-tree || true
-          git rev-parse HEAD || true
           version="v1.26.2"
           arch="x86_64"
           curl -sSL "https://github.com/goreleaser/goreleaser/releases/download/${version}/goreleaser_Linux_${arch}.tar.gz" \
@@ -140,9 +136,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu
-          GIT_CONFIG_COUNT: "1"
-          GIT_CONFIG_KEY_0: "safe.directory"
-          GIT_CONFIG_VALUE_0: ${{ github.workspace }}
 
   release_macos:
     needs: [tag, release_linux_arm64]
@@ -254,6 +247,7 @@ jobs:
             build-essential \
             pkg-config \
             gcc-aarch64-linux-gnu
+          git config --system --add safe.directory "${GITHUB_WORKSPACE}"
 
       - name: Checkout tag
         uses: actions/checkout@v4
@@ -288,11 +282,6 @@ jobs:
         run: |
           set -euo pipefail
           cd "${GITHUB_WORKSPACE}"
-          echo "pwd=$(pwd)"
-          ls -la
-          ls -la .git || true
-          git rev-parse --is-inside-work-tree || true
-          git rev-parse HEAD || true
           version="v1.26.2"
           arch="x86_64"
           curl -sSL "https://github.com/goreleaser/goreleaser/releases/download/${version}/goreleaser_Linux_${arch}.tar.gz" \
@@ -301,9 +290,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CC: aarch64-linux-gnu-gcc
-          GIT_CONFIG_COUNT: "1"
-          GIT_CONFIG_KEY_0: "safe.directory"
-          GIT_CONFIG_VALUE_0: ${{ github.workspace }}
 
   update_homebrew_tap:
     name: Update Homebrew tap
