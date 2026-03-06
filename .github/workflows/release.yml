@@ -87,6 +87,9 @@ jobs:
     container:
       image: ubuntu:20.04
     environment: goreleaser
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Install build dependencies
         run: |
@@ -228,6 +231,9 @@ jobs:
     container:
       image: ubuntu:20.04
     environment: goreleaser
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Install build dependencies
         run: |
