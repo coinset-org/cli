@@ -126,6 +126,12 @@ jobs:
       - name: Run GoReleaser (linux)
         run: |
           set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
+          echo "pwd=$(pwd)"
+          ls -la
+          ls -la .git || true
+          git rev-parse --is-inside-work-tree || true
+          git rev-parse HEAD || true
           version="v1.26.2"
           arch="x86_64"
           curl -sSL "https://github.com/goreleaser/goreleaser/releases/download/${version}/goreleaser_Linux_${arch}.tar.gz" \
@@ -278,6 +284,12 @@ jobs:
       - name: Run GoReleaser (linux arm64)
         run: |
           set -euo pipefail
+          cd "${GITHUB_WORKSPACE}"
+          echo "pwd=$(pwd)"
+          ls -la
+          ls -la .git || true
+          git rev-parse --is-inside-work-tree || true
+          git rev-parse HEAD || true
           version="v1.26.2"
           arch="x86_64"
           curl -sSL "https://github.com/goreleaser/goreleaser/releases/download/${version}/goreleaser_Linux_${arch}.tar.gz" \
