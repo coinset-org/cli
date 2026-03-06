@@ -121,11 +121,13 @@ jobs:
           cp "target/x86_64-unknown-linux-gnu/release/libcoinset.a" cgo-lib/x86_64-unknown-linux-gnu/
 
       - name: Run GoReleaser (linux)
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          distribution: goreleaser
-          version: ~> v1
-          args: release --clean -f .goreleaser.linux.yaml
+        run: |
+          set -euo pipefail
+          version="v1.26.2"
+          arch="x86_64"
+          curl -sSL "https://github.com/goreleaser/goreleaser/releases/download/${version}/goreleaser_Linux_${arch}.tar.gz" \
+            | tar -xz -C /usr/local/bin
+          goreleaser release --clean -f .goreleaser.linux.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CGO_LDFLAGS: -L${{ github.workspace }}/cgo-lib/x86_64-unknown-linux-gnu
@@ -268,11 +270,13 @@ jobs:
           cp "target/aarch64-unknown-linux-gnu/release/libcoinset.a" cgo-lib/aarch64-unknown-linux-gnu/
 
       - name: Run GoReleaser (linux arm64)
-        uses: goreleaser/goreleaser-action@v5
-        with:
-          distribution: goreleaser
-          version: ~> v1
-          args: release --clean -f .goreleaser.linux.arm64.yaml
+        run: |
+          set -euo pipefail
+          version="v1.26.2"
+          arch="x86_64"
+          curl -sSL "https://github.com/goreleaser/goreleaser/releases/download/${version}/goreleaser_Linux_${arch}.tar.gz" \
+            | tar -xz -C /usr/local/bin
+          goreleaser release --clean -f .goreleaser.linux.arm64.yaml
         env:
           GITHUB_TOKEN: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
           CC: aarch64-linux-gnu-gcc
