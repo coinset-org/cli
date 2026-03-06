@@ -83,7 +83,9 @@ jobs:
 
   release_linux:
     needs: tag
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:20.04
     environment: goreleaser
     steps:
       - name: Checkout tag
@@ -96,6 +98,15 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: stable
+
+      - name: Install build dependencies
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            build-essential \
+            pkg-config \
+            git
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -210,7 +221,9 @@ jobs:
 
   release_linux_arm64:
     needs: [tag, release_linux]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
+    container:
+      image: ubuntu:20.04
     environment: goreleaser
     steps:
       - name: Checkout tag
@@ -226,8 +239,13 @@ jobs:
 
       - name: Install Linux arm64 cross toolchain
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates \
+            build-essential \
+            pkg-config \
+            git \
+            gcc-aarch64-linux-gnu
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
