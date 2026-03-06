@@ -88,12 +88,6 @@ jobs:
       image: ubuntu:20.04
     environment: goreleaser
     steps:
-      - name: Checkout tag
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.tag.outputs.new_version }}
-
       - name: Install build dependencies
         run: |
           apt-get update
@@ -103,6 +97,12 @@ jobs:
             git \
             build-essential \
             pkg-config
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -227,12 +227,6 @@ jobs:
       image: ubuntu:20.04
     environment: goreleaser
     steps:
-      - name: Checkout tag
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          ref: ${{ needs.tag.outputs.new_version }}
-
       - name: Install build dependencies
         run: |
           apt-get update
@@ -241,7 +235,14 @@ jobs:
             curl \
             git \
             build-essential \
-            pkg-config
+            pkg-config \
+            gcc-aarch64-linux-gnu
+
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.tag.outputs.new_version }}
 
       - name: Set up Go
         uses: actions/setup-go@v5
