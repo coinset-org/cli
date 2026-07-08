@@ -89,8 +89,10 @@ coinset get_block_spends 5000000 --inspect
 
 `--inspect` is supported when the returned JSON contains one of these shapes:
 - `mempool_item`
+- `mempool_items` (array or map; items inspected individually)
 - `spend_bundle` / `spend_bundle_bytes`
 - `coin_spends` / `block_spends`
+- `coin_solution` (coin spend wrapper, e.g. `get_puzzle_and_solution*`)
 - `coin_spend` (single spend)
 
 Notes:
