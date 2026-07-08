@@ -15,9 +15,14 @@ import (
 )
 
 var (
-	eventsFilter   string
-	eventsTxIDs    []string
-	eventsTxStatus string
+	eventsFilter      string
+	eventsTxIDs       []string
+	eventsTxStatus    string
+	eventsIncoming    bool
+	eventsOutgoing    bool
+	eventsOfferIDs    []string
+	eventsOfferStatus string
+	eventsP2          []string
 )
 
 var eventsCmd = &cobra.Command{
@@ -51,6 +56,18 @@ If no type is specified, all events will be displayed.`,
 		if err := validateTxStatusFilter(eventsTxStatus); err != nil {
 			return err
 		}
+		if err := validateOfferStatusFilter(eventsOfferStatus); err != nil {
+			return err
+		}
+		for _, p2 := range eventsP2 {
+			trimmed := strings.TrimSpace(p2)
+			if trimmed == "" {
+				continue
+			}
+			if _, err := convertAddressOrPuzzleHash(trimmed); err != nil {
+				return err
+			}
+		}
 
 		return nil
 	},
@@ -61,6 +78,11 @@ func init() {
 	eventsCmd.Flags().StringVar(&eventsFilter, "events", "", "Comma-separated event types to subscribe to")
 	eventsCmd.Flags().StringArrayVar(&eventsTxIDs, "tx-id", []string{}, "Transaction id filter (repeatable)")
 	eventsCmd.Flags().StringVar(&eventsTxStatus, "tx-status", "", "Comma-separated tx statuses: pending,confirmed,removed")
+	eventsCmd.Flags().BoolVar(&eventsIncoming, "incoming", false, "Filter transaction events to incoming flow (optionally combined with --p2)")
+	eventsCmd.Flags().BoolVar(&eventsOutgoing, "outgoing", false, "Filter transaction events to outgoing flow (optionally combined with --p2)")
+	eventsCmd.Flags().StringArrayVar(&eventsOfferIDs, "offer-id", []string{}, "Offer id filter (repeatable)")
+	eventsCmd.Flags().StringVar(&eventsOfferStatus, "offer-status", "", "Comma-separated offer lifecycle statuses")
+	eventsCmd.Flags().StringArrayVar(&eventsP2, "p2", []string{}, "Puzzle hash or address filter for transaction/offer participants (repeatable)")
 	rootCmd.AddCommand(eventsCmd)
 }
 
@@ -122,6 +144,33 @@ func validateTxStatusFilter(value string) error {
 	return nil
 }
 
+func isValidWSOfferStatus(status string) bool {
+	if isValidOfferStatus(status) {
+		return true
+	}
+
+	// WebSocket streams expose parse failures even though indexed offer queries do not.
+	return status == "parse_failed"
+}
+
+func validateOfferStatusFilter(value string) error {
+	if value == "" {
+		return nil
+	}
+
+	for _, item := range strings.Split(value, ",") {
+		status := strings.TrimSpace(item)
+		if status == "" {
+			continue
+		}
+		if !isValidWSOfferStatus(status) {
+			return fmt.Errorf("invalid offer status in --offer-status: %s", status)
+		}
+	}
+
+	return nil
+}
+
 func websocketEndpoint(singleEventType string) (string, error) {
 	baseUrl, err := url.Parse(apiRoot())
 	if err != nil {
@@ -167,6 +216,35 @@ func websocketEndpoint(singleEventType string) (string, error) {
 
 	if eventsTxStatus != "" {
 		queryValues.Set("tx_status", eventsTxStatus)
+	}
+
+	if eventsIncoming && !eventsOutgoing {
+		queryValues.Set("tx_direction", "incoming")
+	} else if eventsOutgoing && !eventsIncoming {
+		queryValues.Set("tx_direction", "outgoing")
+	}
+
+	for _, offerID := range eventsOfferIDs {
+		trimmed := strings.TrimSpace(offerID)
+		if trimmed != "" {
+			queryValues.Add("offer_id", trimmed)
+		}
+	}
+
+	if eventsOfferStatus != "" {
+		queryValues.Set("offer_status", eventsOfferStatus)
+	}
+
+	for _, p2 := range eventsP2 {
+		trimmed := strings.TrimSpace(p2)
+		if trimmed == "" {
+			continue
+		}
+		normalized, err := convertAddressOrPuzzleHash(trimmed)
+		if err != nil {
+			return "", err
+		}
+		queryValues.Add("p2", normalized)
 	}
 
 	wsURL.RawQuery = queryValues.Encode()

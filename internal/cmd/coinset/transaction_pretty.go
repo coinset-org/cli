@@ -4,7 +4,6 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
-	"log"
 	"math/big"
 	"os"
 	"regexp"
@@ -71,19 +70,7 @@ func makeTransactionRequest(path string, jsonData map[string]interface{}, pretty
 		return
 	}
 
-	if jq != "." || raw || describe {
-		log.Fatal("--pretty cannot be combined with --query, --raw, or --describe")
-	}
-
-	jsonResponse, err := doRpc(path, jsonData)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-
-	if err := printPrettyTransactionResponse(jsonResponse); err != nil {
-		log.Printf("pretty format unavailable (%v), falling back to JSON output", err)
-		printJson(jsonResponse)
-	}
+	makePrettyRequest(path, jsonData, printPrettyTransactionResponse)
 }
 
 func printPrettyTransactionResponse(jsonBytes []byte) error {
@@ -131,18 +118,6 @@ func printPrettyTransactionResponse(jsonBytes []byte) error {
 	}
 
 	return fmt.Errorf("unsupported transaction response shape")
-}
-
-func responseSucceeded(envelope map[string]json.RawMessage) bool {
-	rawSuccess, ok := envelope["success"]
-	if !ok {
-		return true
-	}
-	var success bool
-	if err := json.Unmarshal(rawSuccess, &success); err != nil {
-		return true
-	}
-	return success
 }
 
 func printTransactionList(payload transactionListEnvelope, styler ansiStyler) {
