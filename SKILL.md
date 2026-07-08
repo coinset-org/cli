@@ -213,7 +213,9 @@ When `--inspect` is used, the output follows `coinset.inspect.v1`:
 - `spend_bundle` / `spend_bundle_bytes`
 - `coin_spends` / `block_spends` (array of coin spends)
 - `coin_spend` or a single object with `puzzle_reveal` + `solution`
-- `mempool_items` (map of tx_id -> mempool_item; each is inspected individually)
+- `mempool_items` (map of tx_id -> mempool_item, or array of mempool_item; each is inspected individually)
+- `coin_solution` (coin spend wrapper returned by `get_puzzle_and_solution*`)
+- `block_spends_with_conditions` (Coinset: wrapper around `coin_spend` entries; extracted and inspected)
 
 If the output shape doesn't match, `--inspect` returns an error. Fall back to the command without `--inspect`.
 

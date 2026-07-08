@@ -164,8 +164,18 @@ func inspectRpcOutput(jsonBytes []byte) ([]byte, error) {
 		return nil, fmt.Errorf("invalid JSON from RPC: %w", err)
 	}
 
-	// Many full node RPCs return mempool items as a map keyed by tx id.
 	if m, ok := v.(map[string]interface{}); ok {
+		// Coin endpoints may wrap a CoinSpend as coin_solution.
+		if cs, ok := m["coin_solution"]; ok {
+			wrapped := map[string]interface{}{"coin_spend": cs}
+			wrappedBytes, err := json.Marshal(wrapped)
+			if err != nil {
+				return nil, fmt.Errorf("failed to re-marshal coin_solution: %w", err)
+			}
+			return coinsetffi.Inspect(wrappedBytes, false, false)
+		}
+
+		// Many full node RPCs return mempool items as a map keyed by tx id.
 		if items, ok := m["mempool_items"]; ok {
 			if itemsMap, ok := items.(map[string]interface{}); ok {
 				out := make(map[string]json.RawMessage, len(itemsMap))
@@ -183,6 +193,49 @@ func inspectRpcOutput(jsonBytes []byte) ([]byte, error) {
 				}
 				return json.Marshal(out)
 			}
+
+			// Some endpoints return mempool items as an array. Inspect each entry.
+			if itemsArr, ok := items.([]interface{}); ok {
+				out := make([]json.RawMessage, 0, len(itemsArr))
+				for i, item := range itemsArr {
+					wrapped := map[string]interface{}{"mempool_item": item}
+					wrappedBytes, err := json.Marshal(wrapped)
+					if err != nil {
+						return nil, fmt.Errorf("failed to re-marshal mempool_item[%d]: %w", i, err)
+					}
+					inspected, err := coinsetffi.Inspect(wrappedBytes, false, false)
+					if err != nil {
+						return nil, fmt.Errorf("inspect mempool_item[%d]: %w", i, err)
+					}
+					out = append(out, json.RawMessage(inspected))
+				}
+				return json.Marshal(out)
+			}
+		}
+
+		// Block spends with conditions wrap each coin spend entry.
+		if items, ok := m["block_spends_with_conditions"]; ok {
+			itemsArr, ok := items.([]interface{})
+			if !ok {
+				return nil, fmt.Errorf("block_spends_with_conditions must be an array")
+			}
+			spends := make([]interface{}, 0, len(itemsArr))
+			for i, entry := range itemsArr {
+				entryMap, ok := entry.(map[string]interface{})
+				if !ok {
+					return nil, fmt.Errorf("block_spends_with_conditions[%d] must be an object", i)
+				}
+				coinSpend, ok := entryMap["coin_spend"]
+				if !ok {
+					return nil, fmt.Errorf("block_spends_with_conditions[%d] missing coin_spend", i)
+				}
+				spends = append(spends, coinSpend)
+			}
+			spendsBytes, err := json.Marshal(spends)
+			if err != nil {
+				return nil, fmt.Errorf("failed to re-marshal block_spends_with_conditions: %w", err)
+			}
+			return coinsetffi.Inspect(spendsBytes, false, false)
 		}
 	}
 
@@ -204,6 +257,9 @@ func looksInspectable(v interface{}) bool {
 		if _, ok := x["mempool_items"]; ok {
 			return true
 		}
+		if _, ok := x["coin_solution"]; ok {
+			return true
+		}
 		if _, ok := x["spend_bundle"]; ok {
 			return true
 		}
@@ -214,6 +270,9 @@ func looksInspectable(v interface{}) bool {
 			return true
 		}
 		if _, ok := x["block_spends"]; ok {
+			return true
+		}
+		if _, ok := x["block_spends_with_conditions"]; ok {
 			return true
 		}
 		if _, ok := x["coin_spend"]; ok {
